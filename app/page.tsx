@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { HeroForm } from "@/components/survey/hero-form"
+import { SurveyCard } from "@/components/survey/survey-card"
 import { VSLSection } from "@/components/survey/vsl-section"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -12,14 +12,13 @@ export default function HomePage() {
     { value: config.stat3Value, label: config.stat3Label },
   ]
 
-  // Parse service areas for client-side validation
   let parsedServiceAreas: Array<{ id: string; centerLat: number; centerLng: number; radiusMiles: number }> = []
   try { parsedServiceAreas = JSON.parse(config.serviceAreas) } catch {}
 
   const disqualifiedPropertyTypes = config.disqualifiedPropertyTypes.split(",").map(s => s.trim()).filter(Boolean)
 
   return (
-    <main className="relative min-h-screen" style={{ backgroundColor: config.accentColor }}>
+    <main className="relative min-h-screen bg-gray-50">
       <div className="relative z-10">
         <Header
           companyName={config.companyName}
@@ -32,34 +31,34 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-4 md:py-6 lg:px-8">
           {/* Hero */}
           <div className="mx-auto text-center">
-            <h1 className="text-4xl font-extrabold leading-tight text-white md:text-5xl lg:text-[3.75rem] lg:leading-[1.15] text-balance">
+            <h1 className="text-3xl font-bold leading-tight text-gray-900 md:text-5xl lg:text-[3.25rem] lg:leading-tight text-balance">
               {config.headline}
               {config.headlineAccent && (
-                <span className="text-white/80"> {config.headlineAccent}</span>
+                <span style={{ color: config.accentColor }}> {config.headlineAccent}</span>
               )}
             </h1>
-            <p className="mt-2 md:mt-3 text-base md:text-lg text-white/70">
+            <p className="mt-2 md:mt-3 text-base md:text-lg text-gray-600">
               {config.subheadline}
             </p>
 
-            {/* Trust indicators — accent-colored checkmarks */}
+            {/* Trust indicators — accent-colored checkmarks on light bg */}
             <div className="mt-3 md:mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 md:gap-5">
               {stats.map((stat) => (
                 <div key={stat.label} className="flex items-center gap-1.5">
                   <div
                     className="flex h-6 w-6 items-center justify-center rounded-full"
-                    style={{ backgroundColor: "rgba(255,255,255,0.15)" }}
+                    style={{ backgroundColor: `${config.accentColor}1A` }}
                   >
                     <svg
                       className="h-3.5 w-3.5"
-                      style={{ color: "white" }}
+                      style={{ color: config.accentColor }}
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-sm md:text-base font-medium text-white/80">
+                  <span className="text-sm md:text-base font-medium text-gray-700">
                     <strong>{stat.value}</strong> {stat.label}
                   </span>
                 </div>
@@ -67,22 +66,22 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Two-step form: address bar → SurveyCard */}
+          {/* Two-stage survey (Stage 1 fires partial-lead webhook; Stage 2 fires full payload) */}
           <div className="mt-4 md:mt-6 mx-auto max-w-3xl">
-            <HeroForm
+            <SurveyCard
               phoneDisplay={config.phoneDisplay}
               phoneHref={config.phoneHref}
+              companyName={config.companyName}
               serviceAreas={parsedServiceAreas}
               disqualifiedPropertyTypes={disqualifiedPropertyTypes}
-              ctaLabel="Get My Free Cash Offer"
             />
           </div>
 
-          {/* Owner / Founder section — shows when ownerName or headshotUrl is set */}
+          {/* Owner / Founder section */}
           {(config.ownerName || config.headshotUrl) && (
             <div className="mt-8 md:mt-12 mx-auto flex flex-col items-center gap-3">
               {config.headshotUrl && (
-                <div className="relative h-16 w-16 overflow-hidden rounded-full border-2" style={{ borderColor: "rgba(255,255,255,0.5)" }}>
+                <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-gray-200">
                   <Image
                     src={config.headshotUrl}
                     alt={config.ownerName || config.companyName}
@@ -94,14 +93,13 @@ export default function HomePage() {
               )}
               {config.ownerName && (
                 <div className="text-center">
-                  <p className="text-base font-semibold text-white">{config.ownerName}</p>
-                  <p className="text-sm text-white/60">{config.companyName}</p>
+                  <p className="text-base font-semibold text-gray-900">{config.ownerName}</p>
+                  <p className="text-sm text-gray-500">{config.companyName}</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* VSL (conditional on env vars) */}
           <div className="mt-6 md:mt-8 mx-auto max-w-4xl">
             <VSLSection />
           </div>
