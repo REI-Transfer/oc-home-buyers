@@ -29,16 +29,13 @@ export default function HomePage() {
         />
 
         <div className="mx-auto max-w-7xl px-4 py-4 md:py-6 lg:px-8">
-          {/* Hero */}
+          {/* Hero — matches Next Stage Homes structure with two accent spans */}
           <div className="mx-auto text-center">
             <h1 className="text-3xl font-bold leading-tight text-gray-900 md:text-5xl lg:text-[3.25rem] lg:leading-tight text-balance">
-              {config.headline}
-              {config.headlineAccent && (
-                <span style={{ color: config.accentColor }}> {config.headlineAccent}</span>
-              )}
+              Need to Sell Your <span style={{ color: config.accentColor }}>Orange County</span> Home Fast? We&apos;ll Beat Any Serious Written <span style={{ color: config.accentColor }}>Cash Offer</span> on Your Home. No Games. No Surprises. <span className="text-[#c5993a]">Close on Your Timeline.</span>
             </h1>
             <p className="mt-2 md:mt-3 text-base md:text-lg text-gray-600">
-              {config.subheadline}
+              We handle the paperwork, the timeline, and the stress. You pick the closing date and walk away with a check. Serving all of Orange County, California.
             </p>
 
             {/* Trust indicators — accent-colored checkmarks on light bg */}
