@@ -186,12 +186,13 @@ interface SurveyCardProps {
   phoneHref?: string
   serviceAreas?: ServiceArea[]
   disqualifiedPropertyTypes?: string[]
+  initialAddress?: string
 }
 
-export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "8000000000", serviceAreas = [], disqualifiedPropertyTypes = ["mobile-home", "land", "other"] }: SurveyCardProps) {
-  const [step, setStep] = useState(1)
+export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "8000000000", serviceAreas = [], disqualifiedPropertyTypes = ["mobile-home", "land", "other"], initialAddress = "" }: SurveyCardProps) {
+  const [step, setStep] = useState(initialAddress ? 2 : 1)
   const [surveyData, setSurveyData] = useState<SurveyData>({
-    address: "",
+    address: initialAddress,
     propertyType: "",
     isLegalOwner: "",
     listedOnMarket: "",
@@ -205,7 +206,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isDisqualified, setIsDisqualified] = useState(false)
   const [disqualifyReason, setDisqualifyReason] = useState("")
-  const [addressVerified, setAddressVerified] = useState(false)
+  const [addressVerified, setAddressVerified] = useState(!!initialAddress)
   const [addressOutOfArea, setAddressOutOfArea] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({})

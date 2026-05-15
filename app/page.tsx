@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { SurveyCard } from "@/components/survey/survey-card"
+import { HeroForm } from "@/components/survey/hero-form"
 import { VSLSection } from "@/components/survey/vsl-section"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -67,13 +67,14 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Survey Form */}
+          {/* Two-step form: address bar → SurveyCard */}
           <div className="mt-4 md:mt-6 mx-auto max-w-3xl">
-            <SurveyCard
+            <HeroForm
               phoneDisplay={config.phoneDisplay}
               phoneHref={config.phoneHref}
               serviceAreas={parsedServiceAreas}
               disqualifiedPropertyTypes={disqualifiedPropertyTypes}
+              ctaLabel="Get My Free Cash Offer"
             />
           </div>
 
