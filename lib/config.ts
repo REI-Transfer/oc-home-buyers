@@ -16,6 +16,10 @@ const config = {
   ownerName:       process.env.OWNER_NAME        ?? "",
   headshotUrl:     process.env.HEADSHOT_URL      ?? "",
 
+  // Advertorial funnel
+  marketName:      process.env.MARKET_NAME       ?? "",
+  smsKeyword:      process.env.SMS_KEYWORD       ?? "OFFER",
+
   // Hero
   headline:        process.env.HEADLINE          ?? "Sell Your House Fast For Cash",
   headlineAccent:  process.env.HEADLINE_ACCENT   ?? "",

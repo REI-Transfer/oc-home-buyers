@@ -175,6 +175,10 @@ interface SurveyCardProps {
   companyName?: string
   serviceAreas?: ServiceArea[]
   disqualifiedPropertyTypes?: string[]
+  // Additive seed props: let the advertorial sticky address bar open the popup pre-filled
+  // at question 2. Omitted everywhere else, so default behavior is unchanged.
+  initialStage1Data?: Partial<Stage1State>
+  initialStage1Step?: number
 }
 
 export function SurveyCard({
@@ -183,13 +187,15 @@ export function SurveyCard({
   companyName = "OC Home Buyers",
   serviceAreas = [],
   disqualifiedPropertyTypes = ["mobile-home", "land", "other"],
+  initialStage1Data,
+  initialStage1Step,
 }: SurveyCardProps) {
   const [stage, setStage] = useState<1 | 2>(1)
-  const [stage1Step, setStage1Step] = useState(1)
+  const [stage1Step, setStage1Step] = useState(initialStage1Step ?? 1)
   const [stage2Step, setStage2Step] = useState(1)
   const totalStage2Steps = 5
 
-  const [stage1Data, setStage1Data] = useState<Stage1State>(INITIAL_STAGE1)
+  const [stage1Data, setStage1Data] = useState<Stage1State>({ ...INITIAL_STAGE1, ...initialStage1Data })
   const [stage2Data, setStage2Data] = useState<Stage2State>(INITIAL_STAGE2)
 
   const [isSubmitted, setIsSubmitted] = useState(false)
