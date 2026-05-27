@@ -6,7 +6,7 @@ export default function ThankYouPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       {/* Note: the Meta Lead event fires once in the SurveyCard on completion (with a
-          dedup eventID). We intentionally do NOT fire a second Lead here — a second
+          dedup eventID). We intentionally do NOT fire a second Lead here. A second
           un-deduped fire on this page inflates reported leads ~2x. */}
 
       <div className="mx-auto max-w-2xl px-4 py-12 md:py-20">
