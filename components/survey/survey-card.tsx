@@ -754,7 +754,7 @@ export function SurveyCard({
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 leading-tight">What condition is the property in?</h2>
-              <p className="mt-2 text-base text-gray-500">Be honest — we buy houses in any condition.</p>
+              <p className="mt-2 text-base text-gray-500">Be honest. We buy houses in any condition.</p>
             </div>
             <div className="flex flex-col gap-3">
               {CONDITION_OPTIONS.map((option) =>
