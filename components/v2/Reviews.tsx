@@ -13,21 +13,21 @@ const REVIEWS = [
       "TODO: paste real OC Home Buyers review #1 here.",
     name: "TODO: Reviewer Name",
     city: "Orange County, CA",
-    avatar: "/images/v2/v2-avatar-1.jpg",
+    avatar: "/images/adv-testimonial-1.jpg",
   },
   {
     quote:
       "TODO: paste real OC Home Buyers review #2 here.",
     name: "TODO: Reviewer Name",
     city: "Orange County, CA",
-    avatar: "/images/v2/v2-avatar-2.jpg",
+    avatar: "/images/adv-testimonial-2.jpg",
   },
   {
     quote:
       "TODO: paste real OC Home Buyers review #3 here.",
     name: "TODO: Reviewer Name",
     city: "Orange County, CA",
-    avatar: "/images/v2/v2-avatar-3.jpg",
+    avatar: "/images/adv-testimonial-3.jpg",
   },
 ]
 
