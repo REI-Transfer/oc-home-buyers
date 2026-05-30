@@ -9,9 +9,13 @@ const BULLETS = [
 
 interface WhyUsProps {
   companyName: string
+  ownerName?: string
 }
 
-export default function WhyUs({ companyName }: WhyUsProps) {
+export default function WhyUs({ companyName, ownerName }: WhyUsProps) {
+  const captionOwners = ownerName && ownerName !== "Our Team" ? ownerName : "The team behind " + companyName
+  const altText = ownerName ? `${ownerName}, the husband-and-wife team behind ${companyName}` : `The ${companyName} team`
+
   return (
     <section
       className="py-14 px-4"
@@ -22,16 +26,15 @@ export default function WhyUs({ companyName }: WhyUsProps) {
     >
       <div className="hpg-container max-w-5xl">
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Family photo */}
+          {/* Owner family photo */}
           <div className="order-2 md:order-1 max-w-sm mx-auto md:mx-0 w-full">
             <div
               className="relative aspect-[3/4] overflow-hidden rounded-2xl shadow-xl"
               style={{ border: "4px solid var(--hpg-gold)" }}
             >
-              {/* TODO: William will add the OC owner family photo at /public/images/owner-family.jpg */}
               <Image
-                src="/images/owner-family.jpg"
-                alt="The OC Home Buyers owner family"
+                src="/images/founders-looney.jpg"
+                alt={altText}
                 fill
                 sizes="(min-width: 768px) 40vw, 90vw"
                 className="object-cover"
@@ -42,8 +45,7 @@ export default function WhyUs({ companyName }: WhyUsProps) {
               className="text-center mt-3 text-[13px] sm:text-[14px] font-semibold"
               style={{ color: "var(--hpg-charcoal)" }}
             >
-              {/* TODO: replace with the OC owner names + tagline */}
-              {"{TODO: owner names}"}, with the two best reasons we do this right.
+              {captionOwners}, with the two best reasons we do this right.
             </p>
           </div>
 
