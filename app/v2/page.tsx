@@ -53,7 +53,7 @@ export default function V2Page() {
           serviceAreas={parsedServiceAreas}
         />
         <ServiceOptions />
-        <WhyUs companyName={config.companyName} />
+        <WhyUs companyName={config.companyName} ownerName={config.ownerName} />
         <Reviews marketName={marketName} />
         <SiteFooter
           companyName={config.companyName}
