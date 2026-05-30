@@ -10,7 +10,7 @@ const config = {
   phoneHref:       process.env.PHONE_HREF        ?? "8000000000",
   accentColor:     process.env.ACCENT_COLOR      ?? "#2563eb",
   headerBgColor:   process.env.HEADER_BG_COLOR   ?? "#ffffff",
-  logoUrl:         process.env.LOGO_URL          ?? "",
+  logoUrl:         process.env.LOGO_URL          ?? "/images/logo.png",
 
   // Owner / personalization
   ownerName:       process.env.OWNER_NAME        ?? "",
