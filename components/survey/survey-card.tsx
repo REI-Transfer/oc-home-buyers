@@ -511,7 +511,7 @@ export function SurveyCard({
           {stage1Step === 1 && (
             <div className="flex flex-col gap-4">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 leading-tight">What's your property address?</h2>
+                <h2 className="text-3xl font-bold text-gray-900 leading-tight">Enter your address to get started</h2>
                 <p className="mt-2 text-base text-gray-500">Start typing and select your address from the list.</p>
               </div>
               <AddressAutocomplete
