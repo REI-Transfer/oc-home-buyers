@@ -4,28 +4,30 @@ import Image from "next/image"
 import { Star } from "lucide-react"
 import { openQuiz } from "./openQuiz"
 
-// TODO: William to replace these with real OC Home Buyers reviews + avatars.
-// Do not invent reviews. Avatars are AI-generated stand-ins (GPT Image 2) until
-// real reviewer photos are available.
+// Reviews pulled verbatim from OC Home Buyers' public Google Business reviews
+// (Place ID ChIJl2lnM8cf3YARMbqnS2UTE9k — 5.0 rating, 40 reviews as of 2026-06-03).
+// Avatars are still AI-generated stand-ins from the original v2 template (GPT
+// Image 2) because Google profile thumbnails are unusable (letter avatars,
+// meme images). Replace with real reviewer photos when collected at signing.
 const REVIEWS = [
   {
     quote:
-      "TODO: paste real OC Home Buyers review #1 here.",
-    name: "TODO: Reviewer Name",
+      "OC Home Buyers made it incredibly easy for us to sell our house. They were very accommodating, helped and paid for our move. We felt like we got a very fair price and were treated respectfully.",
+    name: "Miranda Wu",
     city: "Orange County, CA",
     avatar: "/images/adv-testimonial-1.jpg",
   },
   {
     quote:
-      "TODO: paste real OC Home Buyers review #2 here.",
-    name: "TODO: Reviewer Name",
+      "Before I ever met anybody, we had a phone call. They asked me how much I wanted for the house. Fast forward a couple weeks, Jack came out with paperwork that had that number plus $25k.",
+    name: "Brandon Hill",
     city: "Orange County, CA",
     avatar: "/images/adv-testimonial-2.jpg",
   },
   {
     quote:
-      "TODO: paste real OC Home Buyers review #3 here.",
-    name: "TODO: Reviewer Name",
+      "William was professional and transparent from day one. They made a fair offer, kept things straightforward, and I didn't have to stress about repairs, cleaning, or showings. Closing was smooth and worked around my schedule.",
+    name: "Colin Holley",
     city: "Orange County, CA",
     avatar: "/images/adv-testimonial-3.jpg",
   },
