@@ -10,7 +10,7 @@ export const metadata = {
 export default function Page() {
   return (
     <ArticleShell
-      title="What \"Owned The House For 20 Years\" Really Means In Orange County Equity Terms"
+      title={`What "Owned The House For 20 Years" Really Means In Orange County Equity Terms`}
       dek="Owning a home for two decades in Orange County is a different financial position than owning one for two years. Here is what nobody explains about that gap."
       companyName={config.companyName}
     >
