@@ -1,6 +1,34 @@
 "use client"
 
 import { useState } from "react"
+import type { LucideIcon } from "lucide-react"
+import {
+  Home,
+  Building2,
+  Building,
+  Truck,
+  Map as MapIcon,
+  HelpCircle,
+  ShieldCheck,
+  Tag,
+  Zap,
+  CalendarClock,
+  CalendarDays,
+  Hourglass,
+  Sprout,
+  TreePine,
+  Anchor,
+  TrendingUp,
+  Crown,
+  Shrink,
+  Plane,
+  Gift,
+  KeyRound,
+  Hammer,
+  AlertTriangle,
+  Split,
+  ChevronRight,
+} from "lucide-react"
 import { AddressAutocomplete, type AddressDetails } from "@/components/survey/address-autocomplete"
 
 /**
@@ -16,6 +44,7 @@ import { AddressAutocomplete, type AddressDetails } from "@/components/survey/ad
  *   6. Property address
  *   7. Contact info → submit
  *
+ * Every choice button carries a Lucide icon for visual hit-target reinforcement.
  * Mobile-first. Every choice button is a full-width 56px tap target.
  * Submit posts to the existing /api/submit route (no GHL/n8n changes).
  */
@@ -40,39 +69,46 @@ type FormState = {
   phone: string
 }
 
-const PROPERTY_TYPES = [
-  { id: "single-family", label: "Single Family Home" },
-  { id: "multi-family", label: "Multi-Family / Duplex" },
-  { id: "condo", label: "Condo / Townhouse" },
-  { id: "mobile-home", label: "Mobile / Manufactured Home" },
-  { id: "land", label: "Vacant Land" },
-  { id: "other", label: "Other" },
+type Choice = { id: string; label: string; icon: LucideIcon }
+
+const PROPERTY_TYPES: Choice[] = [
+  { id: "single-family", label: "Single Family Home", icon: Home },
+  { id: "multi-family",  label: "Multi-Family / Duplex", icon: Building2 },
+  { id: "condo",         label: "Condo / Townhouse", icon: Building },
+  { id: "mobile-home",   label: "Mobile / Manufactured Home", icon: Truck },
+  { id: "land",          label: "Vacant Land", icon: MapIcon },
+  { id: "other",         label: "Other", icon: HelpCircle },
 ]
 
-const TIMELINE_OPTIONS = [
-  { id: "asap", label: "ASAP (within 30 days)" },
-  { id: "3-months", label: "Within 3 months" },
-  { id: "6-months", label: "Within 6 months" },
-  { id: "later", label: "6+ months / Just exploring" },
+const LISTED_OPTIONS: Choice[] = [
+  { id: "no",  label: "No, it's not listed",  icon: ShieldCheck },
+  { id: "yes", label: "Yes, it's listed",     icon: Tag },
 ]
 
-const YEARS_OWNED_OPTIONS = [
-  { id: "0-2", label: "Less than 2 years" },
-  { id: "3-5", label: "3 to 5 years" },
-  { id: "6-10", label: "6 to 10 years" },
-  { id: "11-20", label: "11 to 20 years" },
-  { id: "20+", label: "More than 20 years" },
+const TIMELINE_OPTIONS: Choice[] = [
+  { id: "asap",      label: "ASAP (within 30 days)",         icon: Zap },
+  { id: "3-months",  label: "Within 3 months",               icon: CalendarClock },
+  { id: "6-months",  label: "Within 6 months",               icon: CalendarDays },
+  { id: "later",     label: "6+ months / Just exploring",    icon: Hourglass },
 ]
 
-const REASON_OPTIONS = [
-  { id: "downsize", label: "Downsizing / Empty Nest" },
-  { id: "relocation", label: "Relocating" },
-  { id: "inheritance", label: "Inherited / Probate" },
-  { id: "landlord", label: "Tired Landlord" },
-  { id: "repairs", label: "Too Many Repairs" },
-  { id: "foreclosure", label: "Behind on Payments" },
-  { id: "divorce", label: "Divorce" },
-  { id: "other", label: "Other" },
+const YEARS_OWNED_OPTIONS: Choice[] = [
+  { id: "0-2",   label: "Less than 2 years",      icon: Sprout },
+  { id: "3-5",   label: "3 to 5 years",           icon: TreePine },
+  { id: "6-10",  label: "6 to 10 years",          icon: Anchor },
+  { id: "11-20", label: "11 to 20 years",         icon: TrendingUp },
+  { id: "20+",   label: "More than 20 years",     icon: Crown },
+]
+
+const REASON_OPTIONS: Choice[] = [
+  { id: "downsize",    label: "Downsizing / Empty Nest",   icon: Shrink },
+  { id: "relocation",  label: "Relocating",                icon: Plane },
+  { id: "inheritance", label: "Inherited / Probate",       icon: Gift },
+  { id: "landlord",    label: "Tired Landlord",            icon: KeyRound },
+  { id: "repairs",     label: "Too Many Repairs",          icon: Hammer },
+  { id: "foreclosure", label: "Behind on Payments",        icon: AlertTriangle },
+  { id: "divorce",     label: "Divorce",                   icon: Split },
+  { id: "other",       label: "Other",                     icon: HelpCircle },
 ]
 
 export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPropertyTypes }: Props) {
@@ -106,7 +142,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     setTimeout(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), 150)
   }
 
-  // Hard-DQ on property type — stop them before they fill anything else.
+  // Hard-DQ on property type — soft-flag for n8n routing.
   const isPropertyDisqualified = (typeId: string) => disqualifiedPropertyTypes.includes(typeId)
 
   // Address-level service area check — same logic as /v2.
@@ -172,20 +208,33 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
 
   // -------- shared UI primitives --------
 
-  const ChoiceButton = ({ label, selected, onClick }: { label: string; selected?: boolean; onClick: () => void }) => (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full min-h-14 rounded-xl border-2 px-4 py-3 text-base md:text-lg font-medium text-left transition-all active:scale-[0.98]"
-      style={{
-        borderColor: selected ? accentColor : "#e5e7eb",
-        backgroundColor: selected ? `${accentColor}0D` : "#ffffff",
-        color: selected ? accentColor : "#111827",
-      }}
-    >
-      {label}
-    </button>
-  )
+  const ChoiceButton = ({ choice, selected, onClick }: { choice: Choice; selected?: boolean; onClick: () => void }) => {
+    const Icon = choice.icon
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="group w-full min-h-14 rounded-xl border-2 px-4 py-3 text-base md:text-lg font-medium text-left transition-all active:scale-[0.98] flex items-center gap-3"
+        style={{
+          borderColor: selected ? accentColor : "#e5e7eb",
+          backgroundColor: selected ? `${accentColor}0D` : "#ffffff",
+          color: selected ? accentColor : "#111827",
+        }}
+      >
+        <span
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
+          style={{
+            backgroundColor: selected ? `${accentColor}1A` : "#f3f4f6",
+            color: selected ? accentColor : "#4b5563",
+          }}
+        >
+          <Icon className="h-5 w-5" strokeWidth={2.2} />
+        </span>
+        <span className="flex-1">{choice.label}</span>
+        <ChevronRight className="h-5 w-5 text-gray-300 group-hover:translate-x-0.5 transition-transform" />
+      </button>
+    )
+  }
 
   const NextButton = ({ disabled, onClick, label = "Next" }: { disabled?: boolean; onClick: () => void; label?: string }) => (
     <button
@@ -228,17 +277,16 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         <div>
           <StepHeader>What type of property is it?</StepHeader>
           <div className="space-y-3">
-            {PROPERTY_TYPES.map(opt => (
+            {PROPERTY_TYPES.map(c => (
               <ChoiceButton
-                key={opt.id}
-                label={opt.label}
-                selected={form.propertyType === opt.id}
+                key={c.id}
+                choice={c}
+                selected={form.propertyType === c.id}
                 onClick={() => {
-                  if (isPropertyDisqualified(opt.id)) {
-                    update("propertyType", opt.id)
-                    // Soft-DQ: still let them through but tagged for n8n routing
+                  if (isPropertyDisqualified(c.id)) {
+                    update("propertyType", c.id)
                   }
-                  pickAndAdvance("propertyType", opt.id)
+                  pickAndAdvance("propertyType", c.id)
                 }}
               />
             ))}
@@ -251,8 +299,9 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         <div>
           <StepHeader>Is your home currently listed with a realtor?</StepHeader>
           <div className="space-y-3">
-            <ChoiceButton label="No, it's not listed" selected={form.listedOnMarket === "no"} onClick={() => pickAndAdvance("listedOnMarket", "no")} />
-            <ChoiceButton label="Yes, it's listed" selected={form.listedOnMarket === "yes"} onClick={() => pickAndAdvance("listedOnMarket", "yes")} />
+            {LISTED_OPTIONS.map(c => (
+              <ChoiceButton key={c.id} choice={c} selected={form.listedOnMarket === c.id} onClick={() => pickAndAdvance("listedOnMarket", c.id)} />
+            ))}
           </div>
         </div>
       )}
@@ -262,20 +311,20 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         <div>
           <StepHeader>How soon would you like to sell?</StepHeader>
           <div className="space-y-3">
-            {TIMELINE_OPTIONS.map(opt => (
-              <ChoiceButton key={opt.id} label={opt.label} selected={form.timeline === opt.id} onClick={() => pickAndAdvance("timeline", opt.id)} />
+            {TIMELINE_OPTIONS.map(c => (
+              <ChoiceButton key={c.id} choice={c} selected={form.timeline === c.id} onClick={() => pickAndAdvance("timeline", c.id)} />
             ))}
           </div>
         </div>
       )}
 
-      {/* Step 4 — Years owned (William's addition) */}
+      {/* Step 4 — Years owned */}
       {step === 4 && (
         <div>
           <StepHeader>How long have you owned the property?</StepHeader>
           <div className="space-y-3">
-            {YEARS_OWNED_OPTIONS.map(opt => (
-              <ChoiceButton key={opt.id} label={opt.label} selected={form.yearsOwned === opt.id} onClick={() => pickAndAdvance("yearsOwned", opt.id)} />
+            {YEARS_OWNED_OPTIONS.map(c => (
+              <ChoiceButton key={c.id} choice={c} selected={form.yearsOwned === c.id} onClick={() => pickAndAdvance("yearsOwned", c.id)} />
             ))}
           </div>
         </div>
@@ -286,8 +335,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         <div>
           <StepHeader>What&apos;s the main reason for selling?</StepHeader>
           <div className="space-y-3">
-            {REASON_OPTIONS.map(opt => (
-              <ChoiceButton key={opt.id} label={opt.label} selected={form.reason === opt.id} onClick={() => pickAndAdvance("reason", opt.id)} />
+            {REASON_OPTIONS.map(c => (
+              <ChoiceButton key={c.id} choice={c} selected={form.reason === c.id} onClick={() => pickAndAdvance("reason", c.id)} />
             ))}
           </div>
         </div>
@@ -331,7 +380,6 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
                 value={form.firstName}
                 onChange={e => update("firstName", e.target.value)}
                 className="h-14 px-4 rounded-xl border-2 border-gray-200 text-base focus:outline-none focus:ring-2"
-                style={{ ['--tw-ring-color' as string]: accentColor }}
               />
               <input
                 type="text"
@@ -382,7 +430,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Back link — except on step 1 */}
+      {/* Back link — except on step 1 and step 7 */}
       {step > 1 && step < 7 && (
         <button
           type="button"
