@@ -669,11 +669,11 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
             />
             {outsideAreaError && (
               <p className="text-sm text-red-600 text-center">
-                We only buy homes in Orange County, California. Please enter a local address.
+                Sorry, that address is outside our buying area. Please enter a property in Orange County or surrounding Southern California.
               </p>
             )}
             <p className="text-xs text-gray-500 text-center">
-              We serve all of Orange County, California.
+              We buy in Orange County and surrounding Southern California areas.
             </p>
           </div>
         </div>
