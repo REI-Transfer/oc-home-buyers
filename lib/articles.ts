@@ -81,4 +81,60 @@ export const ARTICLES: ArticleMeta[] = [
       "Selling on your own sounds like keeping every dollar. Here is what it actually takes, and where it goes sideways.",
     image: "/images/adv-paperwork-alone.jpg",
   },
+  {
+    slug: "/articles/the-quiet-truth",
+    title:
+      "The Quiet Truth About Selling An Orange County Home You\'ve Owned For 20 Years",
+    teaser:
+      "The number on Zillow is not the number you walk away with. Here is what the math actually looks like, and the other option most homeowners never hear about.",
+    image: "/images/adv-keys-couple.jpg",
+  },
+  {
+    slug: "/articles/oc-senior-equity-now",
+    title:
+      "What Your Orange County Home Is Actually Worth, If You Are 55 Or Older",
+    teaser:
+      "Orange County owners 55+ are sitting on record-level equity. Most have never seen the real number on one page. Here is how to see yours.",
+    image: "/images/adv-couple-window.jpg",
+  },
+  {
+    slug: "/articles/inheriting-an-oc-home",
+    title:
+      "Inheriting An Orange County Home In 2026: The Timeline You Wish Someone Had Explained",
+    teaser:
+      "The twelve-month calendar nobody hands you when you inherit an Orange County home, and how to keep the equity from quietly leaking away.",
+    image: "/images/adv-paperwork-alone.jpg",
+  },
+  {
+    slug: "/articles/oc-property-tax-creep",
+    title:
+      "Why Your Orange County Property Tax Bill Keeps Quietly Growing, Even After The House Is Paid Off",
+    teaser:
+      "Your property tax bill is still going up, even after Prop 13. Here is where the extra is coming from and what it costs over a decade.",
+    image: "/images/adv-numbers-table.jpg",
+  },
+  {
+    slug: "/articles/pre-2014-oc-equity",
+    title:
+      "What Pre-2014 Orange County Homes Are Sitting On, And Why It Does Not Show Up On Zillow",
+    teaser:
+      "Pre-2014 OC homes carry a different equity story than the rest of the market. Here is what that story looks like in real numbers.",
+    image: "/images/adv-home-exterior.jpg",
+  },
+  {
+    slug: "/articles/owned-twenty-years-oc",
+    title:
+      "What \"Owned The House For 20 Years\" Really Means In Orange County Equity Terms",
+    teaser:
+      "Twenty years of OC ownership is a financial position the rest of the market does not have. Here is what that math actually looks like on paper.",
+    image: "/images/adv-couple-kitchen.jpg",
+  },
+  {
+    slug: "/articles/closing-in-14-days-oc",
+    title:
+      "Closing In 14 Days On An Orange County House: How It Actually Works",
+    teaser:
+      "A fourteen-day close sounds aggressive until you see the actual calendar laid out. Here is what each day looks like, with no theater.",
+    image: "/images/adv-handshake.jpg",
+  },
 ]
