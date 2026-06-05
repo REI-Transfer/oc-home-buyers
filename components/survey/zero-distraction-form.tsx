@@ -37,11 +37,11 @@ import {
   Smile,
   Wrench,
   HardHat,
-  DollarSign,
   Phone,
   MessageSquare,
   Eye,
 } from "lucide-react"
+// (DollarSign removed — asking-price step retired 2026-06-05 per William.)
 import { AddressAutocomplete, type AddressDetails, type ServiceArea } from "@/components/survey/address-autocomplete"
 
 /**
@@ -87,7 +87,6 @@ type FormState = {
   yearsOwned: string
   reason: string
   condition: string
-  askingPrice: number
   address: string
   addressDetails: AddressDetails | null
   firstName: string
@@ -177,31 +176,6 @@ const CONDITION_OPTIONS: ConditionChoice[] = [
   },
 ]
 
-// Asking-price slider config.
-// Range covers most OC single-family transactions (~$300k inland → $3M coast+).
-const PRICE_MIN = 300_000
-const PRICE_MAX = 3_000_000
-const PRICE_STEP = 25_000
-const PRICE_DEFAULT = 800_000
-
-const formatPrice = (n: number): string => {
-  if (n >= 1_000_000) {
-    const m = (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 2)
-    return `$${m.replace(/\.?0+$/, "")}M`
-  }
-  return `$${Math.round(n / 1_000).toLocaleString()}k`
-}
-
-// Tier label shown next to the price as the slider moves.
-const priceTier = (n: number): string => {
-  if (n < 500_000)   return "Entry-level OC"
-  if (n < 800_000)   return "Inland OC family home"
-  if (n < 1_200_000) return "Mid-tier OC"
-  if (n < 1_800_000) return "Premium OC"
-  if (n < 2_500_000) return "Coastal / luxury"
-  return "Ultra-luxury coastal"
-}
-
 // -------- module-level UI primitives --------
 // IMPORTANT: keep these OUTSIDE the form component. Defining them inside
 // `ZeroDistractionForm` created a new component type on every render, which
@@ -264,7 +238,7 @@ function StepHeader({ children }: { children: React.ReactNode }) {
 
 export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPropertyTypes, phoneHref, phoneDisplay }: Props) {
   const [step, setStep] = useState(1)
-  const TOTAL_STEPS = 10
+  const TOTAL_STEPS = 9
   const [outsideAreaError, setOutsideAreaError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
@@ -296,7 +270,6 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     yearsOwned: "",
     reason: "",
     condition: "",
-    askingPrice: PRICE_DEFAULT,
     address: "",
     addressDetails: null,
     firstName: "",
@@ -368,8 +341,6 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         years_owned: form.yearsOwned,
         reason: form.reason,
         condition: form.condition,
-        asking_price: form.askingPrice,
-        asking_price_display: formatPrice(form.askingPrice),
         lead_stage: 'complete',
         funnel_variant: 'v3-zero-distraction',
       }
@@ -581,70 +552,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 8 — Asking price (slider) */}
+      {/* Step 8 — Address (was step 9 before asking-price was retired) */}
       {step === 8 && (
-        <div>
-          <StepHeader>
-            If we waive all repairs and selling fees and close on YOUR timeline, what&apos;s the best price you can do for us?
-          </StepHeader>
-
-          {/* Big animated price display */}
-          <div className="text-center mb-6">
-            <div
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl"
-              style={{ backgroundColor: `${accentColor}14` }}
-            >
-              <DollarSign className="h-7 w-7" style={{ color: accentColor }} />
-              <span
-                className="text-4xl md:text-5xl font-extrabold tabular-nums"
-                style={{ color: accentColor }}
-              >
-                {formatPrice(form.askingPrice)}
-              </span>
-            </div>
-            <p className="mt-2 text-sm font-medium text-gray-500">
-              {priceTier(form.askingPrice)}
-            </p>
-          </div>
-
-          {/* Custom-styled range slider */}
-          <div className="px-1">
-            <input
-              type="range"
-              min={PRICE_MIN}
-              max={PRICE_MAX}
-              step={PRICE_STEP}
-              value={form.askingPrice}
-              onChange={e => update("askingPrice", Number(e.target.value))}
-              aria-label="Best asking price"
-              className="w-full h-3 rounded-full appearance-none cursor-pointer bg-gray-200 touch-pan-y"
-              style={{
-                background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${((form.askingPrice - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100}%, #e5e7eb ${((form.askingPrice - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100}%, #e5e7eb 100%)`,
-              }}
-            />
-            <div className="flex justify-between mt-2 text-xs text-gray-500 font-medium">
-              <span>{formatPrice(PRICE_MIN)}</span>
-              <span>{formatPrice(PRICE_MAX)}</span>
-            </div>
-          </div>
-
-          {/* Helpful framing copy */}
-          <p className="mt-5 text-sm text-gray-500 text-center leading-relaxed">
-            Slide to your best number. We&apos;ll let you know within 24 hours if we can hit it.
-          </p>
-
-          <div className="mt-6">
-            <NextButton
-              accentColor={accentColor}
-              onClick={() => setStep(s => s + 1)}
-              label="Lock In My Price"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Step 9 — Address */}
-      {step === 9 && (
         <div>
           <StepHeader>What&apos;s the property address?</StepHeader>
           <div className="space-y-3">
@@ -679,8 +588,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 10 — Contact info → submit */}
-      {step === 10 && (
+      {/* Step 9 — Contact info → submit (First, Last, Email, Phone in that order) */}
+      {step === 9 && (
         <div>
           <StepHeader>Who should we send the offer to?</StepHeader>
           <div className="space-y-3">
@@ -744,8 +653,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Back link — except on step 1 and the final submit step (10) */}
-      {step > 1 && step < 10 && (
+      {/* Back link — except on step 1 and the final submit step (9) */}
+      {step > 1 && step < 9 && (
         <button
           type="button"
           onClick={() => setStep(s => Math.max(s - 1, 1))}
