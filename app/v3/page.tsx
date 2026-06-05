@@ -60,7 +60,7 @@ export default function V3Page() {
         <section className="mt-10 md:mt-12 overflow-hidden rounded-2xl shadow-md border border-gray-100 bg-white">
           <div className="relative w-full aspect-[4/3] md:aspect-[16/10]">
             <img
-              src="/nate-taylor.jpg"
+              src="/images/founders-looney.jpg"
               alt={`${config.ownerName || "Nate & Taylor"} — Orange County Home Buyers`}
               className="absolute inset-0 w-full h-full object-cover"
             />
