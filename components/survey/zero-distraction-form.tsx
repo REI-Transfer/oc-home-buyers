@@ -40,6 +40,7 @@ import {
   DollarSign,
   Phone,
   MessageSquare,
+  Eye,
 } from "lucide-react"
 import { AddressAutocomplete, type AddressDetails, type ServiceArea } from "@/components/survey/address-autocomplete"
 
@@ -74,6 +75,7 @@ const DQ_REASONS = {
   notOwner: "We only work directly with property owners (or co-owners / family with rights to sell).",
   excellent: "Excellent-condition homes do best on the open market through a realtor. We focus on as-is.",
   recentlyBought: "We only buy homes that have been owned for 5+ years.",
+  exploring: "Sounds like you're just gathering info right now. When you're ready to sell, we'll be here.",
 } as const
 type DqKey = keyof typeof DQ_REASONS
 
@@ -120,10 +122,11 @@ const LISTED_OPTIONS: Choice[] = [
 ]
 
 const TIMELINE_OPTIONS: Choice[] = [
-  { id: "asap",      label: "ASAP (within 30 days)",         icon: Zap },
-  { id: "3-months",  label: "Within 3 months",               icon: CalendarClock },
-  { id: "6-months",  label: "Within 6 months",               icon: CalendarDays },
-  { id: "later",     label: "6+ months / Just exploring",    icon: Hourglass },
+  { id: "asap",      label: "ASAP (within 30 days)",  icon: Zap },
+  { id: "3-months",  label: "Within 3 months",        icon: CalendarClock },
+  { id: "6-months",  label: "Within 6 months",        icon: CalendarDays },
+  { id: "6-plus",    label: "6+ months",              icon: Hourglass },
+  { id: "exploring", label: "Just exploring",         icon: Eye },
 ]
 
 const YEARS_OWNED_OPTIONS: Choice[] = [
@@ -277,6 +280,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
       const qualified = ["owner", "part-owner", "family"]
       if (!qualified.includes(value)) return "notOwner"
     }
+    if (key === "timeline" && value === "exploring") return "exploring"
     if (key === "yearsOwned" && typeof value === "string") {
       if (value === "0-2" || value === "3-5") return "recentlyBought"
     }
