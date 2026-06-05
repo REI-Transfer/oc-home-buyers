@@ -10,11 +10,15 @@ const config = {
   phoneHref:       process.env.PHONE_HREF        ?? "8000000000",
   accentColor:     process.env.ACCENT_COLOR      ?? "#2563eb",
   headerBgColor:   process.env.HEADER_BG_COLOR   ?? "#ffffff",
-  logoUrl:         process.env.LOGO_URL          ?? "",
+  logoUrl:         process.env.LOGO_URL          ?? "/images/logo.png",
 
   // Owner / personalization
   ownerName:       process.env.OWNER_NAME        ?? "",
   headshotUrl:     process.env.HEADSHOT_URL      ?? "",
+
+  // Advertorial funnel
+  marketName:      process.env.MARKET_NAME       ?? "",
+  smsKeyword:      process.env.SMS_KEYWORD       ?? "OFFER",
 
   // Hero
   headline:        process.env.HEADLINE          ?? "Sell Your House Fast For Cash",

@@ -175,6 +175,10 @@ interface SurveyCardProps {
   companyName?: string
   serviceAreas?: ServiceArea[]
   disqualifiedPropertyTypes?: string[]
+  // Additive seed props: let the advertorial sticky address bar open the popup pre-filled
+  // at question 2. Omitted everywhere else, so default behavior is unchanged.
+  initialStage1Data?: Partial<Stage1State>
+  initialStage1Step?: number
 }
 
 export function SurveyCard({
@@ -183,13 +187,15 @@ export function SurveyCard({
   companyName = "OC Home Buyers",
   serviceAreas = [],
   disqualifiedPropertyTypes = ["mobile-home", "land", "other"],
+  initialStage1Data,
+  initialStage1Step,
 }: SurveyCardProps) {
   const [stage, setStage] = useState<1 | 2>(1)
-  const [stage1Step, setStage1Step] = useState(1)
+  const [stage1Step, setStage1Step] = useState(initialStage1Step ?? 1)
   const [stage2Step, setStage2Step] = useState(1)
   const totalStage2Steps = 5
 
-  const [stage1Data, setStage1Data] = useState<Stage1State>(INITIAL_STAGE1)
+  const [stage1Data, setStage1Data] = useState<Stage1State>({ ...INITIAL_STAGE1, ...initialStage1Data })
   const [stage2Data, setStage2Data] = useState<Stage2State>(INITIAL_STAGE2)
 
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -505,7 +511,7 @@ export function SurveyCard({
           {stage1Step === 1 && (
             <div className="flex flex-col gap-4">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 leading-tight">What's your property address?</h2>
+                <h2 className="text-3xl font-bold text-gray-900 leading-tight">Enter your address to get started</h2>
                 <p className="mt-2 text-base text-gray-500">Start typing and select your address from the list.</p>
               </div>
               <AddressAutocomplete
@@ -748,7 +754,7 @@ export function SurveyCard({
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 leading-tight">What condition is the property in?</h2>
-              <p className="mt-2 text-base text-gray-500">Be honest — we buy houses in any condition.</p>
+              <p className="mt-2 text-base text-gray-500">Be honest. We buy houses in any condition.</p>
             </div>
             <div className="flex flex-col gap-3">
               {CONDITION_OPTIONS.map((option) =>
