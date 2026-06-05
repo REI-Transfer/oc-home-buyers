@@ -111,6 +111,66 @@ const REASON_OPTIONS: Choice[] = [
   { id: "other",       label: "Other",                     icon: HelpCircle },
 ]
 
+// -------- module-level UI primitives --------
+// IMPORTANT: keep these OUTSIDE the form component. Defining them inside
+// `ZeroDistractionForm` created a new component type on every render, which
+// caused React 19 to unmount/remount every choice button on each state
+// change and swallow tap events on mobile.
+
+function ChoiceButton({
+  choice, selected, accentColor, onClick,
+}: { choice: Choice; selected?: boolean; accentColor: string; onClick: () => void }) {
+  const Icon = choice.icon
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group w-full min-h-14 rounded-xl border-2 px-4 py-3 text-base md:text-lg font-medium text-left transition-all active:scale-[0.98] flex items-center gap-3"
+      style={{
+        borderColor: selected ? accentColor : "#e5e7eb",
+        backgroundColor: selected ? `${accentColor}0D` : "#ffffff",
+        color: selected ? accentColor : "#111827",
+      }}
+    >
+      <span
+        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
+        style={{
+          backgroundColor: selected ? `${accentColor}1A` : "#f3f4f6",
+          color: selected ? accentColor : "#4b5563",
+        }}
+      >
+        <Icon className="h-5 w-5" strokeWidth={2.2} />
+      </span>
+      <span className="flex-1">{choice.label}</span>
+      <ChevronRight className="h-5 w-5 text-gray-300 group-hover:translate-x-0.5 transition-transform" />
+    </button>
+  )
+}
+
+function NextButton({
+  disabled, onClick, accentColor, label = "Next",
+}: { disabled?: boolean; onClick: () => void; accentColor: string; label?: string }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="w-full h-14 md:h-16 rounded-xl text-white font-semibold text-lg md:text-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+      style={{ backgroundColor: accentColor }}
+    >
+      {label}
+    </button>
+  )
+}
+
+function StepHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 text-center md:text-left">
+      {children}
+    </h2>
+  )
+}
+
 export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPropertyTypes }: Props) {
   const [step, setStep] = useState(1)
   const TOTAL_STEPS = 7
@@ -206,55 +266,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     }
   }
 
-  // -------- shared UI primitives --------
-
-  const ChoiceButton = ({ choice, selected, onClick }: { choice: Choice; selected?: boolean; onClick: () => void }) => {
-    const Icon = choice.icon
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="group w-full min-h-14 rounded-xl border-2 px-4 py-3 text-base md:text-lg font-medium text-left transition-all active:scale-[0.98] flex items-center gap-3"
-        style={{
-          borderColor: selected ? accentColor : "#e5e7eb",
-          backgroundColor: selected ? `${accentColor}0D` : "#ffffff",
-          color: selected ? accentColor : "#111827",
-        }}
-      >
-        <span
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg"
-          style={{
-            backgroundColor: selected ? `${accentColor}1A` : "#f3f4f6",
-            color: selected ? accentColor : "#4b5563",
-          }}
-        >
-          <Icon className="h-5 w-5" strokeWidth={2.2} />
-        </span>
-        <span className="flex-1">{choice.label}</span>
-        <ChevronRight className="h-5 w-5 text-gray-300 group-hover:translate-x-0.5 transition-transform" />
-      </button>
-    )
-  }
-
-  const NextButton = ({ disabled, onClick, label = "Next" }: { disabled?: boolean; onClick: () => void; label?: string }) => (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="w-full h-14 md:h-16 rounded-xl text-white font-semibold text-lg md:text-xl shadow-md transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-      style={{ backgroundColor: accentColor }}
-    >
-      {label}
-    </button>
-  )
-
-  const StepHeader = ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 text-center md:text-left">
-      {children}
-    </h2>
-  )
-
-  // -------- step renders --------
+  // -------- step renders (primitives defined at module level above) --------
 
   return (
     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 md:p-8">
@@ -278,8 +290,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
           <StepHeader>What type of property is it?</StepHeader>
           <div className="space-y-3">
             {PROPERTY_TYPES.map(c => (
-              <ChoiceButton
-                key={c.id}
+              <ChoiceButton key={c.id} accentColor={accentColor}
                 choice={c}
                 selected={form.propertyType === c.id}
                 onClick={() => {
@@ -300,7 +311,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
           <StepHeader>Is your home currently listed with a realtor?</StepHeader>
           <div className="space-y-3">
             {LISTED_OPTIONS.map(c => (
-              <ChoiceButton key={c.id} choice={c} selected={form.listedOnMarket === c.id} onClick={() => pickAndAdvance("listedOnMarket", c.id)} />
+              <ChoiceButton key={c.id} accentColor={accentColor} choice={c} selected={form.listedOnMarket === c.id} onClick={() => pickAndAdvance("listedOnMarket", c.id)} />
             ))}
           </div>
         </div>
@@ -312,7 +323,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
           <StepHeader>How soon would you like to sell?</StepHeader>
           <div className="space-y-3">
             {TIMELINE_OPTIONS.map(c => (
-              <ChoiceButton key={c.id} choice={c} selected={form.timeline === c.id} onClick={() => pickAndAdvance("timeline", c.id)} />
+              <ChoiceButton key={c.id} accentColor={accentColor} choice={c} selected={form.timeline === c.id} onClick={() => pickAndAdvance("timeline", c.id)} />
             ))}
           </div>
         </div>
@@ -324,7 +335,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
           <StepHeader>How long have you owned the property?</StepHeader>
           <div className="space-y-3">
             {YEARS_OWNED_OPTIONS.map(c => (
-              <ChoiceButton key={c.id} choice={c} selected={form.yearsOwned === c.id} onClick={() => pickAndAdvance("yearsOwned", c.id)} />
+              <ChoiceButton key={c.id} accentColor={accentColor} choice={c} selected={form.yearsOwned === c.id} onClick={() => pickAndAdvance("yearsOwned", c.id)} />
             ))}
           </div>
         </div>
@@ -336,7 +347,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
           <StepHeader>What&apos;s the main reason for selling?</StepHeader>
           <div className="space-y-3">
             {REASON_OPTIONS.map(c => (
-              <ChoiceButton key={c.id} choice={c} selected={form.reason === c.id} onClick={() => pickAndAdvance("reason", c.id)} />
+              <ChoiceButton key={c.id} accentColor={accentColor} choice={c} selected={form.reason === c.id} onClick={() => pickAndAdvance("reason", c.id)} />
             ))}
           </div>
         </div>
@@ -413,6 +424,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
               <p className="text-sm text-red-600 text-center">{submitError}</p>
             )}
             <NextButton
+              accentColor={accentColor}
               label={submitting ? "Sending..." : "Get My Cash Offer"}
               disabled={
                 submitting ||

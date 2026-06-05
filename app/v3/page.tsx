@@ -64,34 +64,12 @@ export default function V3Page() {
           Please fill out the quick survey below to receive a no obligation cash offer on your home within 24 hours.
         </p>
 
-        {/* THE FORM. The only thing that matters above the fold. */}
+        {/* THE FORM. The ONLY thing on this page. Trust photo lives on /thank-you. */}
         <ZeroDistractionForm
           accentColor={config.accentColor}
           serviceAreas={parsedServiceAreas}
           disqualifiedPropertyTypes={disqualifiedPropertyTypes}
         />
-
-        {/* Trust block BELOW the form — photo shows at its natural aspect ratio
-            so Nate & Taylor are never cropped. The gradient overlay still sits at
-            the bottom of the photo carrying their caption. */}
-        <section className="mt-10 md:mt-12">
-          <div className="relative">
-            <img
-              src="/images/founders-looney.jpg"
-              alt={`${config.ownerName || "Nate & Taylor"} — Orange County Home Buyers`}
-              className="block w-full h-auto"
-            />
-            {/* Transparent gradient overlay anchored to the bottom of the photo */}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent px-5 pb-5 pt-16 md:px-6 md:pb-6 md:pt-20">
-              <p className="text-white text-xl md:text-2xl font-semibold leading-tight drop-shadow">
-                We&apos;re Nate &amp; Taylor.
-              </p>
-              <p className="mt-1 text-white/95 text-sm md:text-base leading-snug drop-shadow">
-                Orange County local. We review every offer personally.
-              </p>
-            </div>
-          </div>
-        </section>
       </div>
 
       <Footer companyName={config.companyName} />
