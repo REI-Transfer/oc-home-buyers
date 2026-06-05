@@ -38,8 +38,10 @@ import {
   Wrench,
   HardHat,
   DollarSign,
+  Phone,
+  MessageSquare,
 } from "lucide-react"
-import { AddressAutocomplete, type AddressDetails } from "@/components/survey/address-autocomplete"
+import { AddressAutocomplete, type AddressDetails, type ServiceArea } from "@/components/survey/address-autocomplete"
 
 /**
  * Zero-distraction multi-step form.
@@ -61,9 +63,19 @@ import { AddressAutocomplete, type AddressDetails } from "@/components/survey/ad
 
 type Props = {
   accentColor: string
-  serviceAreas: Array<{ id: string; centerLat: number; centerLng: number; radiusMiles: number }>
+  serviceAreas: ServiceArea[]
   disqualifiedPropertyTypes: string[]
+  phoneHref: string
+  phoneDisplay: string
 }
+
+// DQ reasons surfaced to the user. Order matters — first match wins on the screen.
+const DQ_REASONS = {
+  notOwner: "We only work directly with property owners (or co-owners / family with rights to sell).",
+  excellent: "Excellent-condition homes do best on the open market through a realtor. We focus on as-is.",
+  recentlyBought: "We only buy homes that have been owned for 5+ years.",
+} as const
+type DqKey = keyof typeof DQ_REASONS
 
 type FormState = {
   propertyType: string
@@ -247,12 +259,30 @@ function StepHeader({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPropertyTypes }: Props) {
+export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPropertyTypes, phoneHref, phoneDisplay }: Props) {
   const [step, setStep] = useState(1)
   const TOTAL_STEPS = 10
   const [outsideAreaError, setOutsideAreaError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  // When non-null, the form short-circuits and shows the DQ screen with Call/Text.
+  const [dq, setDq] = useState<DqKey | null>(null)
+
+  // SMS body sent when user couldn't qualify but still wants help.
+  const smsHref = `sms:${phoneHref}?body=${encodeURIComponent("I was unable to fill out the form but I would still like an offer.")}`
+
+  // Check if a pick triggers a DQ. Returns the DqKey or null.
+  const checkDq = (key: keyof FormState, value: FormState[keyof FormState]): DqKey | null => {
+    if (key === "whoAreYou" && typeof value === "string") {
+      const qualified = ["owner", "part-owner", "family"]
+      if (!qualified.includes(value)) return "notOwner"
+    }
+    if (key === "yearsOwned" && typeof value === "string") {
+      if (value === "0-2" || value === "3-5") return "recentlyBought"
+    }
+    if (key === "condition" && value === "excellent") return "excellent"
+    return null
+  }
 
   const [form, setForm] = useState<FormState>({
     propertyType: "",
@@ -276,8 +306,14 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
   }
 
   // Auto-advance after a choice picked — keeps the page feeling fast on mobile.
+  // Short-circuits to the DQ screen if the pick triggers a disqualifier.
   const pickAndAdvance = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
+    const dqHit = checkDq(key, value)
+    if (dqHit) {
+      setTimeout(() => setDq(dqHit), 150)
+      return
+    }
     setTimeout(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), 150)
   }
 
@@ -350,6 +386,52 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
   }
 
   // -------- step renders (primitives defined at module level above) --------
+
+  // ---- DQ screen render ----
+  if (dq) {
+    return (
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 md:p-8 text-center">
+        <div
+          className="mx-auto flex h-14 w-14 items-center justify-center rounded-full mb-4"
+          style={{ backgroundColor: `${accentColor}1A`, color: accentColor }}
+        >
+          <Phone className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+          Let&apos;s talk directly.
+        </h2>
+        <p className="text-sm md:text-base text-gray-600 mb-2 max-w-md mx-auto">
+          {DQ_REASONS[dq]}
+        </p>
+        <p className="text-sm md:text-base text-gray-700 font-medium mb-6 max-w-md mx-auto">
+          That said, we&apos;d still like to hear from you. Call or text and we&apos;ll see what we can do.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+          <a
+            href={`tel:${phoneHref}`}
+            className="flex items-center justify-center gap-2 h-14 rounded-xl text-white font-semibold text-base shadow-sm active:scale-[0.98] transition-transform"
+            style={{ backgroundColor: accentColor }}
+          >
+            <Phone className="h-5 w-5" />
+            <span>Call Us</span>
+          </a>
+          <a
+            href={smsHref}
+            className="flex items-center justify-center gap-2 h-14 rounded-xl font-semibold text-base shadow-sm active:scale-[0.98] transition-transform border-2"
+            style={{ borderColor: accentColor, color: accentColor, backgroundColor: "#ffffff" }}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span>Text Us</span>
+          </a>
+        </div>
+
+        <p className="mt-4 text-sm font-medium text-gray-500">
+          {phoneDisplay}
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 md:p-8">
@@ -565,9 +647,21 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
             <AddressAutocomplete
               value={form.address}
               onChange={(v) => { update("address", v); setOutsideAreaError(false) }}
-              onSelect={handleAddressSelect}
+              onSelect={(addr, details) => {
+                // Inline the service-area check (the autocomplete also runs it
+                // when serviceAreas is passed; we keep our own here as a fence
+                // so the local DQ message stays consistent).
+                if (!isInServiceArea(details)) {
+                  setOutsideAreaError(true)
+                  return
+                }
+                setOutsideAreaError(false)
+                setForm(prev => ({ ...prev, address: addr, addressDetails: details }))
+                setStep(s => s + 1)
+              }}
+              onOutOfArea={() => setOutsideAreaError(true)}
+              serviceAreas={serviceAreas}
               placeholder="Start typing your address..."
-              className="[&_input]:h-14 [&_input]:text-base [&_input]:rounded-xl [&_input]:border-2 [&_input]:border-gray-200"
             />
             {outsideAreaError && (
               <p className="text-sm text-red-600 text-center">

@@ -15,7 +15,6 @@
 
 import config from "@/lib/config"
 import Image from "next/image"
-import { Phone, MessageSquare } from "lucide-react"
 import { ZeroDistractionForm } from "@/components/survey/zero-distraction-form"
 import { Footer } from "@/components/layout/footer"
 
@@ -31,13 +30,8 @@ export default function V3Page() {
   const disqualifiedPropertyTypes = config.disqualifiedPropertyTypes
     .split(",").map(s => s.trim()).filter(Boolean)
 
-  // SMS deep link with pre-filled body so seniors don't have to type.
-  // `?body=` works on Android natively; iOS accepts it too (no UA detect needed
-  // because Apple silently parses both `?body=` and `&body=` since iOS 17).
-  const smsHref = `sms:${config.phoneHref}?body=${encodeURIComponent("Hi, I'd like a cash offer on my Orange County home.")}`
-
   return (
-    <main className="relative min-h-screen bg-gray-50 pb-24 md:pb-12">
+    <main className="relative min-h-screen bg-gray-50">
       {/* Minimal white header — logo only, no duplicate text, no call button. */}
       <header className="w-full bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-3 lg:px-8">
@@ -64,42 +58,19 @@ export default function V3Page() {
           Please fill out the quick survey below to receive a no obligation cash offer on your home within 24 hours.
         </p>
 
-        {/* THE FORM. The ONLY thing on this page. Trust photo lives on /thank-you. */}
+        {/* THE FORM. The ONLY thing on this page. Trust photo lives on /thank-you.
+            Call + Text CTAs ONLY appear inside the form on DQ — never as a
+            persistent distraction bar (William 2026-06-05). */}
         <ZeroDistractionForm
           accentColor={config.accentColor}
           serviceAreas={parsedServiceAreas}
           disqualifiedPropertyTypes={disqualifiedPropertyTypes}
+          phoneHref={config.phoneHref}
+          phoneDisplay={config.phoneDisplay}
         />
       </div>
 
       <Footer companyName={config.companyName} />
-
-      {/* Sticky bottom CTA bar — mobile only. Call + Text side-by-side, both
-          deep-linked to Nate's number. Pre-filled SMS body so seniors can
-          just send. Hidden on desktop where the form submit is always visible. */}
-      <div
-        className="fixed inset-x-0 bottom-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] md:hidden"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-      >
-        <div className="mx-auto max-w-xl grid grid-cols-2 gap-3 px-4 py-3">
-          <a
-            href={`tel:${config.phoneHref}`}
-            className="flex items-center justify-center gap-2 h-12 rounded-xl text-white font-semibold text-base shadow-sm active:scale-[0.98] transition-transform"
-            style={{ backgroundColor: config.accentColor }}
-          >
-            <Phone className="h-5 w-5" />
-            <span>Call Us</span>
-          </a>
-          <a
-            href={smsHref}
-            className="flex items-center justify-center gap-2 h-12 rounded-xl font-semibold text-base shadow-sm active:scale-[0.98] transition-transform border-2"
-            style={{ borderColor: config.accentColor, color: config.accentColor, backgroundColor: "#ffffff" }}
-          >
-            <MessageSquare className="h-5 w-5" />
-            <span>Text Offer</span>
-          </a>
-        </div>
-      </div>
     </main>
   )
 }
