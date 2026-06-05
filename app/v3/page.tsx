@@ -17,6 +17,7 @@ import config from "@/lib/config"
 import Image from "next/image"
 import { ZeroDistractionForm } from "@/components/survey/zero-distraction-form"
 import { Footer } from "@/components/layout/footer"
+import { TrackingCapture } from "@/components/tracking/tracking-capture"
 
 export const metadata = {
   title: "OC Home Buyers Trusted Cash Buyer",
@@ -32,6 +33,10 @@ export default function V3Page() {
 
   return (
     <main className="relative min-h-screen bg-gray-50">
+      {/* Captures UTMs / click IDs / fbp / fbc / referrer the moment the page
+          mounts and persists to sessionStorage so the form can attach them
+          to the lead at submit time. Renders nothing. */}
+      <TrackingCapture />
       {/* Minimal white header — logo only, no duplicate text, no call button. */}
       <header className="w-full bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-3 lg:px-8">

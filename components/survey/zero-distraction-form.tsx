@@ -43,6 +43,14 @@ import {
 } from "lucide-react"
 // (DollarSign removed — asking-price step retired 2026-06-05 per William.)
 import { AddressAutocomplete, type AddressDetails, type ServiceArea } from "@/components/survey/address-autocomplete"
+import { readCapturedTracking } from "@/components/tracking/tracking-capture"
+import { scoreLead } from "@/lib/lead-scoring"
+
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
 
 /**
  * Zero-distraction multi-step form.
@@ -327,23 +335,94 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     setSubmitting(true)
     setSubmitError("")
     try {
+      // 1. Score the lead from the form answers
+      const score = scoreLead({
+        propertyType:   form.propertyType,
+        whoAreYou:      form.whoAreYou,
+        listedOnMarket: form.listedOnMarket,
+        timeline:       form.timeline,
+        yearsOwned:     form.yearsOwned,
+        reason:         form.reason,
+        condition:      form.condition,
+      })
+
+      // 2. Pull captured tracking (UTMs / click IDs / cookies / referrer)
+      const tracking = readCapturedTracking()
+
+      // 3. Deterministic eventID — shared between browser pixel + server CAPI
+      //    so Meta dedupes the same lead instead of double-counting.
+      const emailNorm = form.email.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
+      const eventID = emailNorm
+        ? `oc_lead_${emailNorm.slice(0, 16)}`
+        : `oc_lead_anon_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+
+      // 4. Fire Meta Lead event from the browser (was missing on /v3 entirely).
+      //    Value tells Andromeda how good this lead is, qualified=true keeps
+      //    optimization aligned to true conversions only.
+      if (typeof window !== "undefined" && window.fbq) {
+        window.fbq("track", "Lead", {
+          value: score.meta_value,
+          currency: "USD",
+          qualified: true,
+          lead_score: score.lead_score,
+          lead_quality: score.lead_quality,
+          content_name: "Cash Offer Request",
+          content_category: "cash_buyer_v3",
+        }, { eventID })
+      }
+
+      // 5. Build the full payload n8n will fan out to Resimpli / Discord /
+      //    Supabase / Gmail / DealOracle / Meta CAPI.
       const payload = {
+        // Identity
         name: `${form.firstName} ${form.lastName}`.trim(),
         first_name: form.firstName,
         last_name: form.lastName,
         email: form.email,
         phone: form.phone,
         address: form.address,
-        property_type: form.propertyType,
-        who_are_you: form.whoAreYou,
+
+        // Form answers
+        property_type:    form.propertyType,
+        who_are_you:      form.whoAreYou,
         listed_on_market: form.listedOnMarket,
-        timeline: form.timeline,
-        years_owned: form.yearsOwned,
-        reason: form.reason,
-        condition: form.condition,
+        timeline:         form.timeline,
+        years_owned:      form.yearsOwned,
+        reason:           form.reason,
+        condition:        form.condition,
+
+        // Scoring (for routing + Meta value)
+        lead_score:           score.lead_score,
+        lead_quality:         score.lead_quality,
+        lead_meta_value:      score.meta_value,
+        lead_score_breakdown: score.breakdown,
+
+        // Meta dedup
+        event_id: eventID,
+        qualified: true,
+
+        // Attribution / tracking
+        utm_source:   tracking.utm_source   ?? "",
+        utm_medium:   tracking.utm_medium   ?? "",
+        utm_campaign: tracking.utm_campaign ?? "",
+        utm_content:  tracking.utm_content  ?? "",
+        utm_term:     tracking.utm_term     ?? "",
+        fbclid:       tracking.fbclid       ?? "",
+        gclid:        tracking.gclid        ?? "",
+        ttclid:       tracking.ttclid       ?? "",
+        msclkid:      tracking.msclkid      ?? "",
+        fbp:          tracking.fbp          ?? "",
+        fbc:          tracking.fbc          ?? "",
+        referrer:     tracking.referrer     ?? "",
+        landing_url:  tracking.landing_url  ?? "",
+        captured_at:  tracking.captured_at  ?? "",
+
+        // Funnel meta
         lead_stage: 'complete',
         funnel_variant: 'v3-zero-distraction',
+        page_url: typeof window !== "undefined" ? window.location.href : "",
       }
+
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
