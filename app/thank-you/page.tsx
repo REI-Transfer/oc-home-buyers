@@ -1,6 +1,33 @@
 import Image from "next/image"
-import { CheckCircle2, Phone } from "lucide-react"
+import Link from "next/link"
+import { CheckCircle2, Phone, MessageSquare, Star, ArrowRight } from "lucide-react"
 import config from "@/lib/config"
+import { ARTICLES } from "@/lib/articles"
+
+// Google reviews verbatim from OC Home Buyers' public Google Business profile
+// (Place ID ChIJl2lnM8cf3YARMbqnS2UTE9k — 5.0 rating). Same data the /v2
+// Reviews component uses; surfaced here so the thank-you page carries the
+// same social proof while the prospect waits for the offer.
+const REVIEWS = [
+  {
+    quote: "OC Home Buyers made it incredibly easy for us to sell our house. They were very accommodating, helped and paid for our move. We felt like we got a very fair price and were treated respectfully.",
+    name: "Miranda Wu",
+    city: "Orange County, CA",
+    avatar: "/images/adv-testimonial-1.jpg",
+  },
+  {
+    quote: "Before I ever met anybody, we had a phone call. They asked me how much I wanted for the house. Fast forward a couple weeks, Jack came out with paperwork that had that number plus $25k.",
+    name: "Brandon Hill",
+    city: "Orange County, CA",
+    avatar: "/images/adv-testimonial-2.jpg",
+  },
+  {
+    quote: "William was professional and transparent from day one. They made a fair offer, kept things straightforward, and I didn't have to stress about repairs, cleaning, or showings.",
+    name: "Colin Holley",
+    city: "Orange County, CA",
+    avatar: "/images/adv-testimonial-3.jpg",
+  },
+]
 
 export default function ThankYouPage() {
   return (
@@ -151,21 +178,120 @@ export default function ThankYouPage() {
           </div>
         </div>
 
-        {/* Call CTA */}
-        <div className="text-center">
-          <p className="text-gray-500 mb-4">Have questions in the meantime? Give us a call.</p>
-          <a
-            href={`tel:${config.phoneHref}`}
-            className="inline-flex items-center gap-2 rounded-full px-8 py-3 text-lg font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: config.accentColor }}
-          >
-            <Phone className="h-5 w-5" />
+        {/* Contact CTA — Text Us "GET OFFER" + Call Us, side by side */}
+        <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 md:p-8 mb-8 text-center">
+          <p className="text-gray-700 font-medium mb-1">
+            Have questions in the meantime?
+          </p>
+          <p className="text-sm text-gray-500 mb-5">
+            Text or call. Either reaches Nate &amp; Taylor directly.
+          </p>
+          <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+            <a
+              href={`sms:${config.phoneHref}?body=${encodeURIComponent("Get offer — I just submitted my address.")}`}
+              className="flex items-center justify-center gap-2 h-14 rounded-xl font-semibold text-base shadow-sm active:scale-[0.98] transition-transform border-2"
+              style={{ borderColor: config.accentColor, color: config.accentColor, backgroundColor: "#ffffff" }}
+            >
+              <MessageSquare className="h-5 w-5" />
+              <span>Text Get Offer</span>
+            </a>
+            <a
+              href={`tel:${config.phoneHref}`}
+              className="flex items-center justify-center gap-2 h-14 rounded-xl text-white font-semibold text-base shadow-sm active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: config.accentColor }}
+            >
+              <Phone className="h-5 w-5" />
+              <span>Call Now</span>
+            </a>
+          </div>
+          <p className="mt-3 text-sm font-medium text-gray-500">
             {config.phoneDisplay}
-          </a>
-          <p className="mt-10 text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} {config.companyName}. All rights reserved.
           </p>
         </div>
+
+        {/* Google Reviews — public Google Business reviews, 5.0 star average. */}
+        <section className="mb-8">
+          <div className="text-center mb-5">
+            <div className="inline-flex items-center gap-1 mb-2">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-5 w-5" style={{ color: "#fbbf24", fill: "#fbbf24" }} />
+              ))}
+            </div>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
+              Real Google Reviews
+            </p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+              What OC homeowners say about working with Nate &amp; Taylor
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {REVIEWS.map((r) => (
+              <div key={r.name} className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
+                <div className="flex gap-0.5 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4" style={{ color: "#fbbf24", fill: "#fbbf24" }} />
+                  ))}
+                </div>
+                <p className="text-sm md:text-[15px] italic text-gray-700 leading-relaxed mb-4">
+                  &ldquo;{r.quote}&rdquo;
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="relative h-10 w-10 rounded-full overflow-hidden shrink-0 ring-2" style={{ borderColor: config.accentColor }}>
+                    <Image src={r.avatar} alt={r.name} fill sizes="40px" unoptimized className="object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900 leading-tight">{r.name}</p>
+                    <p className="text-xs text-gray-500 leading-tight">{r.city}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Advertorial reads — surfaces the article library so the prospect can
+            keep consuming content while they wait. Pulls the first 3 from
+            lib/articles.ts. */}
+        <section className="mb-8">
+          <div className="text-center mb-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
+              Honest Reads
+            </p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+              While you wait, here&apos;s what other OC homeowners want answered
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {ARTICLES.slice(0, 3).map((a) => (
+              <Link
+                key={a.slug}
+                href={a.slug}
+                className="block rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <div className="flex gap-4 p-4">
+                  <div className="relative h-24 w-24 md:h-28 md:w-28 rounded-xl overflow-hidden shrink-0">
+                    <Image src={a.image} alt={a.title} fill sizes="(min-width:768px) 112px, 96px" unoptimized className="object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 leading-snug line-clamp-3">
+                      {a.title}
+                    </p>
+                    <p className="hidden md:block text-sm text-gray-500 mt-1 line-clamp-2">
+                      {a.teaser}
+                    </p>
+                    <span className="inline-flex items-center gap-1 mt-2 text-sm font-medium" style={{ color: config.accentColor }}>
+                      Read more <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <p className="text-sm text-gray-400 text-center">
+          &copy; {new Date().getFullYear()} {config.companyName}. All rights reserved.
+        </p>
       </div>
     </main>
   )

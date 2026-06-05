@@ -40,6 +40,13 @@ export async function POST(request: Request) {
     const data = await request.json()
     const stage = data.lead_stage || 'complete'
 
+    // Honeypot — silently 200 without forwarding to n8n. Bots fill every
+    // field they can find; humans never see hp_company. Return success so
+    // the bot moves on instead of probing for what failed.
+    if (typeof data.hp_company === "string" && data.hp_company.trim().length > 0) {
+      return NextResponse.json({ success: true, stage })
+    }
+
     // Both stages already carry name/email/phone/address (Stage 1 collects them)
     const phone = (data.phone || "").replace(/\D/g, "").replace(/^1/, "")
     if (phone.length !== 10) {

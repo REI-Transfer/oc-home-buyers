@@ -101,6 +101,21 @@ type FormState = {
   lastName: string
   email: string
   phone: string
+  // Honeypot — invisible to humans, bots auto-fill it. If non-empty at
+  // submit time, we silently fake-succeed without ever touching n8n / GHL.
+  hp_company: string
+}
+
+/**
+ * Format a raw phone string as the user types: "9495551234" -> "(949) 555-1234".
+ * Strips a leading 1 and caps at 10 digits.
+ */
+function formatPhoneDisplay(raw: string): string {
+  const digits = raw.replace(/\D/g, "").replace(/^1/, "").slice(0, 10)
+  if (digits.length === 0) return ""
+  if (digits.length <= 3) return `(${digits}`
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
 }
 
 type Choice = { id: string; label: string; icon: LucideIcon }
@@ -284,6 +299,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     lastName: "",
     email: "",
     phone: "",
+    hp_company: "",
   })
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -335,6 +351,14 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     setSubmitting(true)
     setSubmitError("")
     try {
+      // 0. Honeypot — if any value, silently fake-succeed. Real users never see
+      //    the hp_company field; bots auto-fill every field they find.
+      if (form.hp_company.trim().length > 0) {
+        await new Promise(r => setTimeout(r, 400)) // mimic a real submit delay
+        window.location.href = "/thank-you"
+        return
+      }
+
       // 1. Score the lead from the form answers
       const score = scoreLead({
         propertyType:   form.propertyType,
@@ -671,45 +695,85 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
       {step === 9 && (
         <div>
           <StepHeader>Who should we send the offer to?</StepHeader>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-4">
+            {/* Honeypot — visually + interactively hidden from humans. Bots auto-fill
+                every field they find; if this comes back non-empty, /api/submit
+                silently 200s without forwarding to n8n. */}
+            <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+              <label htmlFor="hp_company">Company (leave blank)</label>
               <input
+                id="hp_company"
                 type="text"
-                inputMode="text"
-                autoComplete="given-name"
-                placeholder="First name"
-                value={form.firstName}
-                onChange={e => update("firstName", e.target.value)}
-                className="h-14 px-4 rounded-xl border-2 border-gray-200 text-base focus:outline-none focus:ring-2"
-              />
-              <input
-                type="text"
-                inputMode="text"
-                autoComplete="family-name"
-                placeholder="Last name"
-                value={form.lastName}
-                onChange={e => update("lastName", e.target.value)}
-                className="h-14 px-4 rounded-xl border-2 border-gray-200 text-base focus:outline-none focus:ring-2"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                value={form.hp_company}
+                onChange={e => update("hp_company", e.target.value)}
               />
             </div>
-            <input
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="Email address"
-              value={form.email}
-              onChange={e => update("email", e.target.value)}
-              className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 text-base focus:outline-none focus:ring-2"
-            />
-            <input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="Phone number"
-              value={form.phone}
-              onChange={e => update("phone", e.target.value)}
-              className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 text-base focus:outline-none focus:ring-2"
-            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="given-name"
+                  placeholder="John"
+                  value={form.firstName}
+                  onChange={e => update("firstName", e.target.value)}
+                  className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="family-name"
+                  placeholder="Smith"
+                  value={form.lastName}
+                  onChange={e => update("lastName", e.target.value)}
+                  className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={e => update("email", e.target.value)}
+                className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                Phone Number
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                placeholder="(949) 555-1234"
+                value={form.phone}
+                onChange={e => update("phone", formatPhoneDisplay(e.target.value))}
+                className="w-full h-14 px-4 rounded-xl border-2 border-gray-200 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:border-transparent tabular-nums"
+              />
+            </div>
             {submitError && (
               <p className="text-sm text-red-600 text-center">{submitError}</p>
             )}
