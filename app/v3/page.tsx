@@ -14,8 +14,9 @@
  */
 
 import config from "@/lib/config"
+import Image from "next/image"
+import { Phone, MessageSquare } from "lucide-react"
 import { ZeroDistractionForm } from "@/components/survey/zero-distraction-form"
-import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
 export const metadata = {
@@ -30,15 +31,29 @@ export default function V3Page() {
   const disqualifiedPropertyTypes = config.disqualifiedPropertyTypes
     .split(",").map(s => s.trim()).filter(Boolean)
 
+  // SMS deep link with pre-filled body so seniors don't have to type.
+  // `?body=` works on Android natively; iOS accepts it too (no UA detect needed
+  // because Apple silently parses both `?body=` and `&body=` since iOS 17).
+  const smsHref = `sms:${config.phoneHref}?body=${encodeURIComponent("Hi, I'd like a cash offer on my Orange County home.")}`
+
   return (
-    <main className="relative min-h-screen bg-gray-50">
-      <Header
-        companyName={config.companyName}
-        phoneDisplay={config.phoneDisplay}
-        phoneHref={config.phoneHref}
-        logoUrl={config.logoUrl}
-        headerBgColor={config.headerBgColor}
-      />
+    <main className="relative min-h-screen bg-gray-50 pb-24 md:pb-12">
+      {/* Minimal white header — logo only, no duplicate text, no call button. */}
+      <header className="w-full bg-white shadow-sm">
+        <div className="mx-auto flex max-w-7xl items-center justify-center px-4 py-3 lg:px-8">
+          {config.logoUrl && (
+            <Image
+              src={config.logoUrl}
+              alt={config.companyName}
+              width={72}
+              height={72}
+              className="h-14 w-14 md:h-16 md:w-16 flex-shrink-0 object-contain"
+              unoptimized
+              priority
+            />
+          )}
+        </div>
+      </header>
 
       <div className="mx-auto max-w-xl px-4 pt-6 pb-12 md:pt-10">
         {/* Headline + sub — copy verbatim from Pathway / safepathadvisors.com */}
@@ -76,19 +91,37 @@ export default function V3Page() {
               </p>
             </div>
           </div>
-          <div className="mt-3 text-center">
-            <a
-              href={`tel:${config.phoneHref}`}
-              className="text-sm md:text-base font-medium underline"
-              style={{ color: config.accentColor }}
-            >
-              Call us directly: {config.phoneDisplay}
-            </a>
-          </div>
         </section>
       </div>
 
       <Footer companyName={config.companyName} />
+
+      {/* Sticky bottom CTA bar — mobile only. Call + Text side-by-side, both
+          deep-linked to Nate's number. Pre-filled SMS body so seniors can
+          just send. Hidden on desktop where the form submit is always visible. */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 bg-white border-t border-gray-200 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto max-w-xl grid grid-cols-2 gap-3 px-4 py-3">
+          <a
+            href={`tel:${config.phoneHref}`}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl text-white font-semibold text-base shadow-sm active:scale-[0.98] transition-transform"
+            style={{ backgroundColor: config.accentColor }}
+          >
+            <Phone className="h-5 w-5" />
+            <span>Call Us</span>
+          </a>
+          <a
+            href={smsHref}
+            className="flex items-center justify-center gap-2 h-12 rounded-xl font-semibold text-base shadow-sm active:scale-[0.98] transition-transform border-2"
+            style={{ borderColor: config.accentColor, color: config.accentColor, backgroundColor: "#ffffff" }}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span>Text Offer</span>
+          </a>
+        </div>
+      </div>
     </main>
   )
 }
