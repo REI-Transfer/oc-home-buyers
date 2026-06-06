@@ -89,7 +89,7 @@ export const HEADLINE_OVERRIDES: HeadlineOverride[] = [
   {
     match: /^B4-Mailroom-PropertyTaxBill(?:-|$)/i,
     h1: "Worried About Your Next Orange County Property Tax Bill?",
-    sub: "OC homeowners 55+ are getting cash in 24 hours and locking in their number before the next bill hits. As-is, 14-day close.",
+    sub: "Orange County homeowners are getting cash in 24 hours and locking in their number before the next bill hits. As-is, 14-day close.",
   },
 
   // ====================================================================
