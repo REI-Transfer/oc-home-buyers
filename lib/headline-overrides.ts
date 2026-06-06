@@ -9,7 +9,9 @@
  * Naming contract: {ConceptCode}-{ConceptName}-{CopyVariant}-{Geo}
  * Full rules: ~/.claude/projects/-Users-williamyu/memory/feedback_ad-name-scent-contract.md
  *
- * 🚫 NEVER add B-prefix entries here. Concept B (Mailroom) is RETIRED.
+ * B (Mailroom) was retired 2026-05-31, then RE-ACTIVATED 2026-06-06 for the
+ * OC senior DNA /v3 test. New B entries are OK again — see the Mailroom
+ * section below.
  *
  * When a new ConceptCode ships in this client's Meta account:
  *   1. Add the override row here FIRST
@@ -76,8 +78,19 @@ export const HEADLINE_OVERRIDES: HeadlineOverride[] = [
   },
 
   // ====================================================================
-  // 🚫 Concept B (Mailroom) is RETIRED as of 2026-05-31 — never add B entries
+  // Mailroom family (Template B) — RE-ACTIVATED 2026-06-06 for OC senior DNA
+  // v3 test. Was retired 2026-05-31, brought back for the B4 PropertyTaxBill
+  // angle running on /v3 (Pathway-style LP) targeting 55+ homeowners.
   // ====================================================================
+
+  // B4 — PropertyTaxBill (OC Senior v2 / v3 LP)
+  // Trailing dash is OPTIONAL — current Meta ad ships token "B4-Mailroom-PropertyTaxBill"
+  // with no Geo suffix. Matches both that token and the full canonical form.
+  {
+    match: /^B4-Mailroom-PropertyTaxBill(?:-|$)/i,
+    h1: "Worried About Your Next Orange County Property Tax Bill?",
+    sub: "OC homeowners 55+ are getting cash in 24 hours and locking in their number before the next bill hits. As-is, 14-day close.",
+  },
 
   // ====================================================================
   // Tap-Range family (Template C) — interactive year-built / years-owned
