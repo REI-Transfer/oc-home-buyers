@@ -65,9 +65,11 @@ const REASON_OPTIONS = [
   { id: "behind-payments", label: "Behind on payments" },
   { id: "inherited", label: "Inherited property" },
   { id: "divorce", label: "Divorce or separation" },
-  { id: "relocation", label: "Job relocation" },
-  { id: "downsizing", label: "Downsizing" },
   { id: "repairs", label: "Can't afford repairs" },
+  { id: "vacant", label: "Vacant property I need to sell" },
+  { id: "urgent-financial", label: "Urgent financial situation not listed above" },
+  { id: "life-event", label: "Personal situation not listed above" },
+  { id: "none-of-above", label: "No reason / seeing what my house is worth" },
 ]
 
 const OWNERSHIP_LENGTH_OPTIONS = [
@@ -84,10 +86,10 @@ const SCORE_TIMELINE: Record<string, number> = {
   'asap': 3, '2-weeks': 2, '30-days': 1, '60-days': 0, 'flexible': 0,
 }
 const SCORE_REASON: Record<string, number> = {
-  'foreclosure': 3, 'behind-payments': 3,
-  'inherited': 2, 'repairs': 2,
-  'other': 1,
-  'relocation': 0, 'divorce': 0, 'downsizing': 0,
+  'foreclosure': 3, 'behind-payments': 3, 'urgent-financial': 3,
+  'inherited': 2, 'repairs': 2, 'vacant': 2, 'divorce': 2,
+  'life-event': 1,
+  'none-of-above': 0,
 }
 const SCORE_CONDITION: Record<string, number> = {
   'poor': 1, 'distressed': 1,
@@ -105,8 +107,9 @@ function isQualifiedForMeta(d: SurveyData): boolean {
   const okOwner = d.isLegalOwner !== 'no'
   const okTimeline = d.timeline !== 'flexible'
   const okOwnership = d.ownershipLength !== 'less-than-3'
+  const okReason = d.reason !== 'none-of-above'
   const okCondition = d.condition !== 'excellent'
-  return okType && okListed && okOwner && okTimeline && okOwnership && okCondition
+  return okType && okListed && okOwner && okTimeline && okOwnership && okReason && okCondition
 }
 function leadQuality(score: number): 'premium' | 'standard' | 'low' {
   if (score >= 6) return 'premium'
@@ -119,6 +122,7 @@ function disqualifyReasonFor(d: SurveyData): string {
   if (d.isLegalOwner === 'no') return 'not_owner'
   if (d.timeline === 'flexible') return 'flexible_timeline'
   if (d.ownershipLength === 'less-than-3') return 'short_ownership'
+  if (d.reason === 'none-of-above') return 'no_reason'
   if (d.condition === 'excellent') return 'excellent_condition'
   return 'unknown'
 }
@@ -395,6 +399,10 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
       setTimeout(() => { setDisqualifyReason("shortOwnership"); setIsDisqualified(true) }, 300)
       return
     }
+    if (field === "reason" && value === "none-of-above") {
+      setTimeout(() => { setDisqualifyReason("noReason"); setIsDisqualified(true) }, 300)
+      return
+    }
     if (field === "condition" && value === "excellent") {
       setTimeout(() => { setDisqualifyReason("excellentCondition"); setIsDisqualified(true) }, 300)
       return
@@ -464,6 +472,11 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
         title: "We're Unable to Assist",
         message: "We focus on homeowners whose properties need some work. Homes in excellent, move-in-ready condition are usually a better fit for a traditional sale.",
         detail: "If your situation is unique, feel free to give us a call and we'll see what we can do.",
+      },
+      noReason: {
+        title: "We're Not the Right Fit",
+        message: "We work with homeowners who have a specific situation that calls for a fast, as-is cash sale. Without one, you'll typically get more money listing on the open market.",
+        detail: "If your situation changes, feel free to come back any time. We'd be glad to help.",
       },
     }
     const msg = disqualifyMessages[disqualifyReason] || disqualifyMessages.notOwner
