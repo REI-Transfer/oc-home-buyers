@@ -86,9 +86,8 @@ const SCORE_TIMELINE: Record<string, number> = {
   'asap': 3, '2-weeks': 2, '30-days': 1, '60-days': 0, 'flexible': 0,
 }
 const SCORE_REASON: Record<string, number> = {
-  'foreclosure': 3, 'behind-payments': 3, 'urgent-financial': 3,
-  'inherited': 2, 'repairs': 2, 'vacant': 2, 'divorce': 2,
-  'life-event': 1,
+  'foreclosure': 3, 'behind-payments': 3, 'urgent-financial': 3, 'inherited': 3, 'repairs': 3,
+  'vacant': 2, 'divorce': 2, 'life-event': 2,
   'none-of-above': 0,
 }
 const SCORE_CONDITION: Record<string, number> = {
