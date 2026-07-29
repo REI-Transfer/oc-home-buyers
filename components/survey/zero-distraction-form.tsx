@@ -44,6 +44,7 @@ import {
 // (DollarSign removed — asking-price step retired 2026-06-05 per William.)
 import { AddressAutocomplete, type AddressDetails, type ServiceArea } from "@/components/survey/address-autocomplete"
 import { readCapturedTracking } from "@/components/tracking/tracking-capture"
+import { readGfSid } from "@/lib/tracking"
 import { scoreLead } from "@/lib/lead-scoring"
 
 declare global {
@@ -440,6 +441,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         referrer:     tracking.referrer     ?? "",
         landing_url:  tracking.landing_url  ?? "",
         captured_at:  tracking.captured_at  ?? "",
+        gf_sid:  readGfSid(),
 
         // Funnel meta
         lead_stage: 'complete',
