@@ -243,35 +243,41 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
     getIPAddress().then((ip) => { trackingRef.current.ip = ip })
   }, [])
   const [honeypot, setHoneypot] = useState("")
+  const earlyFired = useRef(false)
 
   const totalSteps = 9
 
   const handleNext = async () => {
-    // Block out-of-area addresses on Continue with a disqualify screen
+    // Out-of-area is a geographic service fence (not a lead-quality DQ) — keep it.
     if (step === 1 && addressOutOfArea) {
       setDisqualifyReason("outOfArea")
       setIsDisqualified(true)
       return
     }
-    if (step === totalSteps) {
-      const errors: {[key: string]: string} = {}
 
+    // Contact step (2): require first name + phone; email + last name optional.
+    // Validate, fire the early-capture partial lead, then advance.
+    if (step === 2) {
+      const errors: {[key: string]: string} = {}
       const firstCheck = validateName(surveyData.firstName)
       if (!firstCheck.valid) errors.firstName = firstCheck.msg
-      const lastCheck = validateName(surveyData.lastName)
-      if (!lastCheck.valid) errors.lastName = lastCheck.msg
-
-      const emailCheck = validateEmail(surveyData.email)
-      if (!emailCheck.valid) errors.email = emailCheck.msg
-
       const phoneCheck = validatePhone(surveyData.phone)
       if (!phoneCheck.valid) errors.phone = phoneCheck.msg
-
+      if (surveyData.email.trim()) {
+        const emailCheck = validateEmail(surveyData.email)
+        if (!emailCheck.valid) errors.email = emailCheck.msg
+      }
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors)
         return
       }
+      fireEarlyCapture()
+      setStep(3)
+      return
+    }
 
+    if (step === totalSteps) {
+      // Contact was validated at step 2; the final question (condition) completes the lead.
       const timeSpent = Date.now() - formStartTime.current
       if (timeSpent < 3000) {
         setIsSubmitted(true)
@@ -352,6 +358,37 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
     }
   }
 
+  // Early-capture: partial lead (contact only, NO Meta event) fired right after the
+  // Contact step, so the lead reaches the CRM (n8n 'early' -> ResIMPLI) even if the
+  // survey is abandoned. Fires at most once; skipped if the honeypot is filled.
+  const fireEarlyCapture = () => {
+    if (earlyFired.current || honeypot) return
+    earlyFired.current = true
+    try {
+      const fullName = `${surveyData.firstName.trim()} ${surveyData.lastName.trim()}`.trim()
+      const payload = {
+        firstName: surveyData.firstName.trim(),
+        lastName: surveyData.lastName.trim(),
+        name: fullName,
+        email: surveyData.email,
+        phone: surveyData.phone,
+        address: surveyData.address,
+        lead_stage: 'early',
+        source: `${companyName} - Survey`,
+        submittedAt: new Date().toISOString(),
+        gf_sid: readGfSid(),
+        ...trackingRef.current,
+      }
+      void fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+    } catch (e) {
+      // non-blocking — a failed early capture must never stop the survey
+    }
+  }
+
   const handleBack = () => {
     if (step > 1) setStep(step - 1)
   }
@@ -359,55 +396,25 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
   const canProceed = () => {
     switch (step) {
       case 1: return surveyData.address.trim().length > 0 && addressVerified
-      case 2: return surveyData.propertyType !== ""
-      case 3: return surveyData.isLegalOwner !== ""
-      case 4: return surveyData.listedOnMarket !== ""
-      case 5: return surveyData.timeline !== ""
-      case 6: return surveyData.condition !== ""
-      case 7: return surveyData.reason !== ""
-      case 8: return surveyData.ownershipLength !== ""
-      case 9: return (
+      case 2: return (
         surveyData.firstName.trim().length > 0 &&
-        surveyData.lastName.trim().length > 0 &&
-        surveyData.email.trim().length > 0 &&
-        surveyData.phone.trim().length > 0
+        surveyData.phone.replace(/\D/g, "").length >= 10
       )
+      case 3: return surveyData.propertyType !== ""
+      case 4: return surveyData.isLegalOwner !== ""
+      case 5: return surveyData.listedOnMarket !== ""
+      case 6: return surveyData.timeline !== ""
+      case 7: return surveyData.ownershipLength !== ""
+      case 8: return surveyData.reason !== ""
+      case 9: return surveyData.condition !== ""
       default: return false
     }
   }
 
   const handleOptionSelect = (field: keyof SurveyData, value: string) => {
     setSurveyData({ ...surveyData, [field]: value })
-
-    if (field === "propertyType" && disqualifiedPropertyTypes.includes(value)) {
-      setTimeout(() => { setDisqualifyReason("propertyType"); setIsDisqualified(true) }, 300)
-      return
-    }
-    if (field === "listedOnMarket" && ["listed-realtor", "listed-fsbo"].includes(value)) {
-      setTimeout(() => { setDisqualifyReason("listed"); setIsDisqualified(true) }, 300)
-      return
-    }
-    if (field === "isLegalOwner" && value === "no") {
-      setTimeout(() => { setDisqualifyReason("notOwner"); setIsDisqualified(true) }, 300)
-      return
-    }
-    if (field === "timeline" && value === "flexible") {
-      setTimeout(() => { setDisqualifyReason("flexibleTimeline"); setIsDisqualified(true) }, 300)
-      return
-    }
-    if (field === "ownershipLength" && value === "less-than-3") {
-      setTimeout(() => { setDisqualifyReason("shortOwnership"); setIsDisqualified(true) }, 300)
-      return
-    }
-    if (field === "reason" && value === "none-of-above") {
-      setTimeout(() => { setDisqualifyReason("noReason"); setIsDisqualified(true) }, 300)
-      return
-    }
-    if (field === "condition" && value === "excellent") {
-      setTimeout(() => { setDisqualifyReason("excellentCondition"); setIsDisqualified(true) }, 300)
-      return
-    }
-
+    // DQ -> flag: no lead is dropped. Qualification is computed at submit
+    // (isQualifiedForMeta) and drives the Meta event (Lead vs LeadLowIntent).
     setTimeout(() => { if (step < totalSteps) setStep(step + 1) }, 300)
   }
 
@@ -559,7 +566,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">What type of property is it?</h2>
@@ -571,7 +578,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">Are you the legal homeowner?</h2>
@@ -583,7 +590,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">Is the property currently listed on the market?</h2>
@@ -595,7 +602,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">How fast are you looking to sell?</h2>
@@ -607,7 +614,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 6 && (
+        {step === 9 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">What condition is the property in?</h2>
@@ -619,7 +626,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 7 && (
+        {step === 8 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">What's your reason for selling?</h2>
@@ -631,7 +638,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 8 && (
+        {step === 7 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">How long have you owned the home?</h2>
@@ -643,7 +650,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 9 && (
+        {step === 2 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">How can we reach you?</h2>
@@ -679,7 +686,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
               <div>
                 <Input
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Email address (optional)"
                   value={surveyData.email}
                   onChange={(e) => {
                     setSurveyData({ ...surveyData, email: e.target.value })
