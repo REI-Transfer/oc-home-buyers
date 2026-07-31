@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     const email = (data.email || "").trim().toLowerCase()
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ success: false, error: "Invalid email" }, { status: 400 })
     }
 
