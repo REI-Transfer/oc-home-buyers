@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import type { LucideIcon } from "lucide-react"
 import {
   Home,
@@ -55,16 +55,19 @@ declare global {
 
 /**
  * Zero-distraction multi-step form.
- * Pathway-pattern: qualifying questions FIRST, contact info LAST.
+ * Contact-first (Nate 2026-07): address + contact captured up front, then the
+ * qualifying questions; submit fires on the final (condition) question.
  *
  * Steps:
- *   1. Property type
- *   2. Listed on the market?
- *   3. Timeline to sell
- *   4. How long have you owned it?  (William directive 2026-06-05)
- *   5. Reason for selling
- *   6. Property address
- *   7. Contact info → submit
+ *   1. Property address (service-area fenced)
+ *   2. Contact info (name + phone required, email optional) -> early-capture POST
+ *   3. Property type
+ *   4. Who are you
+ *   5. Listed on the market?
+ *   6. Timeline to sell
+ *   7. How long have you owned it?
+ *   8. Reason for selling
+ *   9. Condition -> submit (Meta gating: Lead vs LeadLowIntent)
  *
  * Every choice button carries a Lucide icon for visual hit-target reinforcement.
  * Mobile-first. Every choice button is a full-width 56px tap target.
@@ -266,6 +269,16 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
   const [outsideAreaError, setOutsideAreaError] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  // Early-capture guard — the partial POST after the Contact step fires at most once.
+  const earlyFired = useRef(false)
+
+  // Qualification flag (same 4 criteria the retired hard-DQ used) — now it only
+  // tags the lead for Meta gating; every lead still reaches the CRM.
+  const isQualified = (f: FormState): boolean =>
+    ["owner", "part-owner", "family"].includes(f.whoAreYou) &&
+    f.timeline !== "exploring" &&
+    !(f.yearsOwned === "0-2" || f.yearsOwned === "3-5") &&
+    f.condition !== "excellent"
   // When non-null, the form short-circuits and shows the DQ screen with Call/Text.
   const [dq, setDq] = useState<DqKey | null>(null)
 
@@ -311,11 +324,6 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
   // Short-circuits to the DQ screen if the pick triggers a disqualifier.
   const pickAndAdvance = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm(prev => ({ ...prev, [key]: value }))
-    const dqHit = checkDq(key, value)
-    if (dqHit) {
-      setTimeout(() => setDq(dqHit), 150)
-      return
-    }
     setTimeout(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), 150)
   }
 
@@ -348,47 +356,50 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     setStep(s => s + 1)
   }
 
-  const submit = async () => {
+  const submit = async (override?: Partial<FormState>) => {
+    const f = { ...form, ...(override || {}) }
     setSubmitting(true)
     setSubmitError("")
     try {
-      // 0. Honeypot — if any value, silently fake-succeed. Real users never see
-      //    the hp_company field; bots auto-fill every field they find.
-      if (form.hp_company.trim().length > 0) {
-        await new Promise(r => setTimeout(r, 400)) // mimic a real submit delay
+      // 0. Honeypot — if any value, silently fake-succeed.
+      if (f.hp_company.trim().length > 0) {
+        await new Promise(r => setTimeout(r, 400))
         window.location.href = "/thank-you"
         return
       }
 
       // 1. Score the lead from the form answers
       const score = scoreLead({
-        propertyType:   form.propertyType,
-        whoAreYou:      form.whoAreYou,
-        listedOnMarket: form.listedOnMarket,
-        timeline:       form.timeline,
-        yearsOwned:     form.yearsOwned,
-        reason:         form.reason,
-        condition:      form.condition,
+        propertyType:   f.propertyType,
+        whoAreYou:      f.whoAreYou,
+        listedOnMarket: f.listedOnMarket,
+        timeline:       f.timeline,
+        yearsOwned:     f.yearsOwned,
+        reason:         f.reason,
+        condition:      f.condition,
       })
 
-      // 2. Pull captured tracking (UTMs / click IDs / cookies / referrer)
+      // 2. Qualification flag (same 4 criteria as the retired hard-DQ)
+      const qualified = isQualified(f)
+
+      // 3. Captured tracking (UTMs / click IDs / cookies / referrer)
       const tracking = readCapturedTracking()
 
-      // 3. Deterministic eventID — shared between browser pixel + server CAPI
+      // 4. Deterministic eventID — shared between browser pixel + server (GoFunnel)
       //    so Meta dedupes the same lead instead of double-counting.
-      const emailNorm = form.email.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
+      const emailNorm = f.email.toLowerCase().trim().replace(/[^a-z0-9]/g, "")
       const eventID = emailNorm
         ? `oc_lead_${emailNorm.slice(0, 16)}`
         : `oc_lead_anon_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
 
-      // 4. Fire Meta Lead event from the browser (was missing on /v3 entirely).
-      //    Value tells Andromeda how good this lead is, qualified=true keeps
-      //    optimization aligned to true conversions only.
+      // 5. Meta gating: qualified -> standard "Lead" (Andromeda optimizes to these);
+      //    unqualified -> custom "LeadLowIntent". Same eventID for dedup.
+      const metaEventName = qualified ? "Lead" : "LeadLowIntent"
       if (typeof window !== "undefined" && window.fbq) {
-        window.fbq("track", "Lead", {
+        window.fbq("track", metaEventName, {
           value: score.meta_value,
           currency: "USD",
-          qualified: true,
+          qualified,
           lead_score: score.lead_score,
           lead_quality: score.lead_quality,
           content_name: "Cash Offer Request",
@@ -396,35 +407,44 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         }, { eventID })
       }
 
-      // 5. Build the full payload n8n will fan out to Resimpli / Discord /
-      //    Supabase / Gmail / DealOracle / Meta CAPI.
+      // 6. Full payload — n8n fans out; /api/submit also forwards to GoFunnel.
       const payload = {
-        // Identity
-        name: `${form.firstName} ${form.lastName}`.trim(),
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
+        // Identity (snake_case for n8n + camelCase aliases for GoFunnel)
+        name: `${f.firstName} ${f.lastName}`.trim(),
+        first_name: f.firstName,
+        last_name: f.lastName,
+        firstName: f.firstName,
+        lastName: f.lastName,
+        email: f.email,
+        phone: f.phone,
+        address: f.address,
 
-        // Form answers
-        property_type:    form.propertyType,
-        who_are_you:      form.whoAreYou,
-        listed_on_market: form.listedOnMarket,
-        timeline:         form.timeline,
-        years_owned:      form.yearsOwned,
-        reason:           form.reason,
-        condition:        form.condition,
+        // Form answers (snake_case)
+        property_type:    f.propertyType,
+        who_are_you:      f.whoAreYou,
+        listed_on_market: f.listedOnMarket,
+        timeline:         f.timeline,
+        years_owned:      f.yearsOwned,
+        reason:           f.reason,
+        condition:        f.condition,
 
-        // Scoring (for routing + Meta value)
+        // camelCase aliases /api/submit -> GoFunnel reads
+        propertyType:   f.propertyType,
+        listedOnMarket: f.listedOnMarket,
+        isLegalOwner:   ["owner", "part-owner", "family"].includes(f.whoAreYou) ? "yes" : "no",
+
+        // Scoring (routing + Meta value)
         lead_score:           score.lead_score,
         lead_quality:         score.lead_quality,
         lead_meta_value:      score.meta_value,
         lead_score_breakdown: score.breakdown,
 
-        // Meta dedup
-        event_id: eventID,
-        qualified: true,
+        // Meta gating + dedup (shared id, gated event name)
+        qualified,
+        event_id:        eventID,
+        meta_event_id:   eventID,
+        meta_event_name: metaEventName,
+        meta_value:      score.meta_value,
 
         // Attribution / tracking
         utm_source:   tracking.utm_source   ?? "",
@@ -463,6 +483,60 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
       setSubmitError(err instanceof Error ? err.message : "Something went wrong")
       setSubmitting(false)
     }
+  }
+
+  // Early-capture: fire a partial lead (contact only, NO Meta event) right after
+  // the Contact step, so the lead reaches the CRM even if the survey is abandoned.
+  // n8n routes lead_stage:'early' to the ResIMPLI create-lead branch.
+  const submitEarly = async () => {
+    if (earlyFired.current) return
+    if (!form.firstName.trim() || form.phone.replace(/\D/g, "").length < 10) return
+    earlyFired.current = true
+    try {
+      const tracking = readCapturedTracking()
+      const payload = {
+        name: `${form.firstName} ${form.lastName}`.trim(),
+        first_name: form.firstName,
+        last_name: form.lastName,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        address: form.address,
+        hp_company: form.hp_company,
+        utm_source:   tracking.utm_source   ?? "",
+        utm_medium:   tracking.utm_medium   ?? "",
+        utm_campaign: tracking.utm_campaign ?? "",
+        utm_content:  tracking.utm_content  ?? "",
+        utm_term:     tracking.utm_term     ?? "",
+        fbclid:       tracking.fbclid       ?? "",
+        gclid:        tracking.gclid        ?? "",
+        ttclid:       tracking.ttclid       ?? "",
+        msclkid:      tracking.msclkid      ?? "",
+        fbp:          tracking.fbp          ?? "",
+        fbc:          tracking.fbc          ?? "",
+        referrer:     tracking.referrer     ?? "",
+        landing_url:  tracking.landing_url  ?? "",
+        captured_at:  tracking.captured_at  ?? "",
+        gf_sid:  readGfSid(),
+        lead_stage: 'early',
+        funnel_variant: 'v3-zero-distraction',
+        page_url: typeof window !== "undefined" ? window.location.href : "",
+      }
+      await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+    } catch {
+      // non-blocking — a failed early capture must never stop the survey
+    }
+  }
+
+  // Contact step "Continue" — fire the early partial capture, then advance.
+  const handleContactContinue = () => {
+    void submitEarly()
+    setStep(s => Math.min(s + 1, TOTAL_STEPS))
   }
 
   // -------- step renders (primitives defined at module level above) --------
@@ -529,8 +603,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       </div>
 
-      {/* Step 1 — Property Type */}
-      {step === 1 && (
+      {/* Step 3 — Property Type */}
+      {step === 3 && (
         <div>
           <StepHeader>What type of property is it?</StepHeader>
           <div className="space-y-3">
@@ -550,8 +624,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 2 — Who are you? */}
-      {step === 2 && (
+      {/* Step 4 — Who are you? */}
+      {step === 4 && (
         <div>
           <StepHeader>And who are you in this transaction?</StepHeader>
           <div className="space-y-3">
@@ -562,8 +636,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 3 — Listed on Market */}
-      {step === 3 && (
+      {/* Step 5 — Listed on Market */}
+      {step === 5 && (
         <div>
           <StepHeader>Is your home currently listed with a realtor?</StepHeader>
           <div className="space-y-3">
@@ -574,8 +648,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 4 — Timeline to sell */}
-      {step === 4 && (
+      {/* Step 6 — Timeline to sell */}
+      {step === 6 && (
         <div>
           <StepHeader>How soon would you like to sell?</StepHeader>
           <div className="space-y-3">
@@ -586,8 +660,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 5 — Years owned */}
-      {step === 5 && (
+      {/* Step 7 — Years owned */}
+      {step === 7 && (
         <div>
           <StepHeader>How long have you owned the property?</StepHeader>
           <div className="space-y-3">
@@ -598,8 +672,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 6 — Reason for selling */}
-      {step === 6 && (
+      {/* Step 8 — Reason for selling */}
+      {step === 8 && (
         <div>
           <StepHeader>What&apos;s the main reason for selling?</StepHeader>
           <div className="space-y-3">
@@ -610,8 +684,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 7 — Condition (two-line choice with sub-copy) */}
-      {step === 7 && (
+      {/* Step 9 — Condition (two-line choice with sub-copy) */}
+      {step === 9 && (
         <div>
           <StepHeader>How would you describe the condition?</StepHeader>
           <div className="space-y-3">
@@ -622,8 +696,9 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => pickAndAdvance("condition", c.id)}
-                  className="group w-full rounded-xl border-2 px-4 py-3 text-left transition-all active:scale-[0.98] flex items-start gap-3"
+                  disabled={submitting}
+                  onClick={() => { update("condition", c.id); void submit({ condition: c.id }) }}
+                  className="group w-full rounded-xl border-2 px-4 py-3 text-left transition-all active:scale-[0.98] flex items-start gap-3 disabled:opacity-50"
                   style={{
                     borderColor: selected ? accentColor : "#e5e7eb",
                     backgroundColor: selected ? `${accentColor}0D` : "#ffffff",
@@ -653,12 +728,15 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
                 </button>
               )
             })}
+            {submitError && (
+              <p className="text-sm text-red-600 text-center mt-3">{submitError}</p>
+            )}
           </div>
         </div>
       )}
 
-      {/* Step 8 — Address (was step 9 before asking-price was retired) */}
-      {step === 8 && (
+      {/* Step 1 — Address (was step 9 before asking-price was retired) */}
+      {step === 1 && (
         <div>
           <StepHeader>What&apos;s the property address?</StepHeader>
           <div className="space-y-3">
@@ -693,8 +771,8 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
         </div>
       )}
 
-      {/* Step 9 — Contact info → submit (First, Last, Email, Phone in that order) */}
-      {step === 9 && (
+      {/* Step 2 — Contact info → submit (First, Last, Email, Phone in that order) */}
+      {step === 2 && (
         <div>
           <StepHeader>Who should we send the offer to?</StepHeader>
           <div className="space-y-4">
@@ -748,7 +826,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
             </div>
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Email Address
+                Email Address (optional)
               </label>
               <input
                 id="email"
@@ -781,15 +859,12 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
             )}
             <NextButton
               accentColor={accentColor}
-              label={submitting ? "Sending..." : "Get My Cash Offer"}
+              label="Continue"
               disabled={
-                submitting ||
                 !form.firstName.trim() ||
-                !form.lastName.trim() ||
-                !form.email.trim() ||
                 form.phone.replace(/\D/g, "").length < 10
               }
-              onClick={submit}
+              onClick={handleContactContinue}
             />
             <p className="text-xs text-gray-500 text-center px-2">
               By tapping above you agree to be contacted about your offer. No spam. No obligation.
