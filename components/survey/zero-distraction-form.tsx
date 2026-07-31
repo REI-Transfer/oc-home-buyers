@@ -54,7 +54,7 @@ declare global {
 }
 
 /**
- * Zero-distraction multi-step form.
+ * Zero-distraction multi-step form. (rebuild 2026-07-31: force fresh client bundle)
  * Contact-first (Nate 2026-07): address + contact captured up front, then the
  * qualifying questions; submit fires on the final (condition) question.
  *
