@@ -42,7 +42,7 @@ import {
   Eye,
 } from "lucide-react"
 // (DollarSign removed — asking-price step retired 2026-06-05 per William.)
-import { AddressAutocomplete, type AddressDetails, type ServiceArea } from "@/components/survey/address-autocomplete"
+import { AddressAutocomplete, type AddressDetails, type AddressResolver, type ServiceArea } from "@/components/survey/address-autocomplete"
 import { readCapturedTracking } from "@/components/tracking/tracking-capture"
 import { readGfSid } from "@/lib/tracking"
 import { scoreLead } from "@/lib/lead-scoring"
@@ -267,6 +267,10 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
   const [step, setStep] = useState(1)
   const TOTAL_STEPS = 9
   const [outsideAreaError, setOutsideAreaError] = useState(false)
+  // Step 1 Continue: typed-but-not-tapped addresses get looked up instead of ignored.
+  const addressResolver = useRef<AddressResolver>(null)
+  const [resolvingAddress, setResolvingAddress] = useState(false)
+  const [addressNotFound, setAddressNotFound] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   // Early-capture guard — the partial POST after the Contact step fires at most once.
@@ -354,6 +358,14 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
     setOutsideAreaError(false)
     setForm(prev => ({ ...prev, address, addressDetails: details }))
     setStep(s => s + 1)
+  }
+
+  const handleAddressContinue = async () => {
+    setAddressNotFound(false)
+    setResolvingAddress(true)
+    const found = await addressResolver.current?.resolveTyped()
+    setResolvingAddress(false)
+    if (!found) setAddressNotFound(true)
   }
 
   const submit = async (override?: Partial<FormState>) => {
@@ -742,7 +754,7 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
           <div className="space-y-3">
             <AddressAutocomplete
               value={form.address}
-              onChange={(v) => { update("address", v); setOutsideAreaError(false) }}
+              onChange={(v) => { update("address", v); setOutsideAreaError(false); setAddressNotFound(false) }}
               onSelect={(addr, details) => {
                 // Inline the service-area check (the autocomplete also runs it
                 // when serviceAreas is passed; we keep our own here as a fence
@@ -756,9 +768,22 @@ export function ZeroDistractionForm({ accentColor, serviceAreas, disqualifiedPro
                 setStep(s => s + 1)
               }}
               onOutOfArea={() => setOutsideAreaError(true)}
+              onNotFound={() => setAddressNotFound(true)}
+              resolverRef={addressResolver}
               serviceAreas={serviceAreas}
               placeholder="Start typing your address..."
             />
+            <NextButton
+              accentColor={accentColor}
+              label={resolvingAddress ? "Finding your address..." : "Continue"}
+              disabled={!form.address.trim() || resolvingAddress}
+              onClick={() => { void handleAddressContinue() }}
+            />
+            {addressNotFound && (
+              <p className="text-sm text-red-600 text-center">
+                Please tap your address in the list so we can find it.
+              </p>
+            )}
             {outsideAreaError && (
               <p className="text-sm text-red-600 text-center">
                 Sorry, that address is outside our buying area. Please enter a property in Orange County or surrounding Southern California.
