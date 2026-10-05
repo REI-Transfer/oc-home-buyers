@@ -3,6 +3,7 @@ import Link from "next/link"
 import { CheckCircle2, Phone, MessageSquare, Star, ArrowRight } from "lucide-react"
 import config from "@/lib/config"
 import { ARTICLES } from "@/lib/articles"
+import { VideoGallery } from "@/components/thank-you/video-gallery"
 
 // Google reviews verbatim from OC Home Buyers' public Google Business profile
 // (Place ID ChIJl2lnM8cf3YARMbqnS2UTE9k — 5.0 rating). Same data the /v2
@@ -76,6 +77,11 @@ export default function ThankYouPage() {
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Thank-you video gallery: intro + one collapsible card per video (lib/thank-you-videos.ts). */}
+        <section className="mb-8">
+          <VideoGallery accentColor={config.accentColor} />
         </section>
 
         {/* Video section */}
