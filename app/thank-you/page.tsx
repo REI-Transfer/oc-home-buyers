@@ -3,6 +3,7 @@ import Link from "next/link"
 import { CheckCircle2, Phone, MessageSquare, Star, ArrowRight } from "lucide-react"
 import config from "@/lib/config"
 import { ARTICLES } from "@/lib/articles"
+import { VideoGallery } from "@/components/thank-you/video-gallery"
 
 // Google reviews verbatim from OC Home Buyers' public Google Business profile
 // (Place ID ChIJl2lnM8cf3YARMbqnS2UTE9k — 5.0 rating). Same data the /v2
@@ -27,19 +28,6 @@ const REVIEWS = [
     city: "Orange County, CA",
     avatar: "/images/adv-testimonial-3.jpg",
   },
-]
-
-// Thank-you videos, in viewing order (files are named for their position; there is no Video 6).
-// URLs are the Vercel Blob URLs exactly as delivered, percent-encoding included.
-const THANKYOU_VIDEOS: { title: string; src: string }[] = [
-  { title: "You're Confirmed. Watch This Before Your Call.", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/%22You%27re%20Confirmed.%20Watch%20This%20Before%20Your%20Call.%22.mp4" },
-  { title: "Who Are We and Why Should You Trust Us?", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%201%20-%20Who%20Are%20We%20and%20Why%20Should%20You%20Trust%20Us%3F.mp4" },
-  { title: "What Other Homeowners Are Saying", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%202%20-%20%22What%20Other%20Homeowners%20Are%20Saying.mp4" },
-  { title: "How We Calculate Your Cash Offer", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%203%20-%20How%20We%20Calculate%20Your%20Cash%20Offer%20%282nd%20take%29.mp4" },
-  { title: "What If I Don't Like the Offer?", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%204%20-%20What%20If%20I%20Don%27t%20Like%20the%20Offer%3F.mp4" },
-  { title: "What We WON'T Buy (And We'll Tell You Upfront)", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%205%20-%20What%20We%20WON%27T%20Buy%20%28And%20We%27ll%20Tell%20You%20Upfront%29.mp4" },
-  { title: "Cash Offer vs. Listing With a Realtor", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%207%20-%20Cash%20Offer%20vs.%20Listing%20With%20a%20Realtor.mp4" },
-  { title: "3 Things to Have Ready Before Our Call", src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%208%20-%203%20Things%20to%20Have%20Ready%20Before%20Our%20Call.mp4" },
 ]
 
 export default function ThankYouPage() {
@@ -91,41 +79,27 @@ export default function ThankYouPage() {
           </div>
         </section>
 
-        {/* Video section: the optional NEXT_PUBLIC_THANKYOU_VIDEO_URL first (unchanged behaviour),
-            then THANKYOU_VIDEOS in order. The videos are 16:9, so each box reserves that shape
-            and only loads metadata until played. */}
-        {(() => {
-          const videos = [
-            ...(process.env.NEXT_PUBLIC_THANKYOU_VIDEO_URL ? [{ title: "", src: process.env.NEXT_PUBLIC_THANKYOU_VIDEO_URL }] : []),
-            ...THANKYOU_VIDEOS,
-          ]
-          if (videos.length === 0) return null
-          return (
-            <div className="mb-8">
-              <h2 className="mb-3 text-center text-xl font-bold text-gray-900">
-                Watch This While You Wait
-              </h2>
-              <div className="space-y-6">
-                {videos.map((v) => (
-                  <div key={v.src}>
-                    {v.title && (
-                      <h3 className="mb-2 text-center text-base font-semibold text-gray-900">{v.title}</h3>
-                    )}
-                    <div className="mx-auto w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                      <video
-                        src={v.src}
-                        controls
-                        playsInline
-                        preload="metadata"
-                        className="block aspect-video w-full bg-black"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {/* Thank-you video gallery: intro + one collapsible card per video (lib/thank-you-videos.ts). */}
+        <section className="mb-8">
+          <VideoGallery accentColor={config.accentColor} />
+        </section>
+
+        {/* Video section */}
+        {process.env.NEXT_PUBLIC_THANKYOU_VIDEO_URL && (
+          <div className="mb-8">
+            <h2 className="mb-3 text-center text-xl font-bold text-gray-900">
+              Watch This While You Wait
+            </h2>
+            <div className="mx-auto max-w-xs overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+              <video
+                src={process.env.NEXT_PUBLIC_THANKYOU_VIDEO_URL}
+                controls
+                playsInline
+                className="w-full"
+              />
             </div>
-          )
-        })()}
+          </div>
+        )}
 
         {/* Personal note card */}
         <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6 md:p-8 mb-6">
