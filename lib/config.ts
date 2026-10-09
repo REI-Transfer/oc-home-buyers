@@ -11,6 +11,12 @@ const config = {
   accentColor:     process.env.ACCENT_COLOR      ?? "#2563eb",
   headerBgColor:   process.env.HEADER_BG_COLOR   ?? "#ffffff",
   logoUrl:         process.env.LOGO_URL          ?? "/images/logo.png",
+  // Header logo: on a coloured header, the white transparent version of the brand logo (the brand
+  // logo is a JPEG on white and showed as a white tile); on a white header, the normal logo.
+  headerLogoUrl:   process.env.HEADER_LOGO_URL
+                   ?? (["#ffffff", "white"].includes((process.env.HEADER_BG_COLOR ?? "#ffffff").trim().toLowerCase())
+                       ? (process.env.LOGO_URL ?? "/images/logo.png")
+                       : "/images/logo-white.png"),
 
   // Owner / personalization
   ownerName:       process.env.OWNER_NAME        ?? "",

@@ -15,24 +15,26 @@ export function Header({ companyName, phoneDisplay, phoneHref, logoUrl, headerBg
   return (
     <header className="w-full shadow-sm" style={{ backgroundColor: headerBgColor }}>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
-        {/* Logo + Company Name */}
+        {/* Logo (wide, transparent; it already spells the company name) or the name as text */}
         <div className="flex items-center gap-3">
-          {logoUrl && (
+          {logoUrl ? (
             <Image
               src={logoUrl}
               alt={companyName}
-              width={44}
-              height={44}
-              className="h-11 w-11 flex-shrink-0 rounded-lg object-contain"
+              width={665}
+              height={200}
+              className="h-10 w-auto flex-shrink-0 md:h-11"
               unoptimized
+              priority
             />
+          ) : (
+            <span
+              className="text-base font-bold leading-tight"
+              style={{ color: isDark ? "white" : "var(--accent)" }}
+            >
+              {companyName}
+            </span>
           )}
-          <span
-            className="text-base font-bold leading-tight"
-            style={{ color: isDark ? "white" : "var(--accent)" }}
-          >
-            {companyName}
-          </span>
         </div>
 
         {/* Phone CTA */}

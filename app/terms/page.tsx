@@ -13,7 +13,7 @@ export default function TermsPage() {
         companyName={config.companyName}
         phoneDisplay={config.phoneDisplay}
         phoneHref={config.phoneHref}
-        logoUrl={config.logoUrl}
+        logoUrl={config.headerLogoUrl}
         headerBgColor={config.headerBgColor}
       />
       <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">

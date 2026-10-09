@@ -24,7 +24,7 @@ export default function HomePage() {
           companyName={config.companyName}
           phoneDisplay={config.phoneDisplay}
           phoneHref={config.phoneHref}
-          logoUrl={config.logoUrl}
+          logoUrl={config.headerLogoUrl}
           headerBgColor={config.headerBgColor}
         />
 
@@ -38,7 +38,7 @@ export default function HomePage() {
               No fees. No repairs. Close in as few as 14 days. We handle the paperwork, the timeline, and the stress. You pick the closing date and walk away with a check.
             </p>
 
-            {/* Trust badges — verified: BBB Accredited (A rating), 4.9 Google, local since 2018 */}
+            {/* Trust badges — BBB Accredited (A rating), 4.9 Google (50 reviews), local since 2015 (client, 2026-10-09) */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:gap-3">
               <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
                 <span className="flex h-5 items-center justify-center rounded-sm bg-[#0a3d62] px-1 text-[10px] font-extrabold leading-none text-white">BBB</span>
@@ -55,14 +55,14 @@ export default function HomePage() {
                       </svg>
                     ))}
                   </span>
-                  <span className="text-xs text-gray-500">(18)</span>
+                  <span className="text-xs text-gray-500">(50)</span>
                 </span>
               </div>
               <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
                 <svg className="h-4 w-4" style={{ color: config.accentColor }} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-xs font-semibold text-gray-800 md:text-sm">Orange County <span className="text-gray-300">|</span> Since 2018</span>
+                <span className="text-xs font-semibold text-gray-800 md:text-sm">Orange County <span className="text-gray-300">|</span> Since 2015</span>
               </div>
             </div>
 
@@ -111,7 +111,7 @@ export default function HomePage() {
               Nate &amp; Taylor Looney
             </h2>
             <p className="mt-1 text-sm text-gray-600 md:text-base">
-              A husband-and-wife team buying houses across Orange County, as-is, since 2018.
+              A husband-and-wife team buying houses across Orange County, as-is, since 2015.
             </p>
             <Image
               src="/images/founders-looney-cutout.png"
