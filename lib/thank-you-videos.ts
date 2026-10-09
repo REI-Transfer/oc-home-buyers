@@ -31,7 +31,7 @@ export const VIDEOS: VideoEntry[] = [
     src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%202%20-%20%22What%20Other%20Homeowners%20Are%20Saying.mp4",
   },
   {
-    title: "How We Calculate Your Cash Offer",
+    title: "How We Calculate Your Offer",
     src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%203%20-%20How%20We%20Calculate%20Your%20Cash%20Offer%20%282nd%20take%29.mp4",
   },
   {
@@ -43,7 +43,7 @@ export const VIDEOS: VideoEntry[] = [
     src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%205%20-%20What%20We%20WON%27T%20Buy%20%28And%20We%27ll%20Tell%20You%20Upfront%29.mp4",
   },
   {
-    title: "Cash Offer vs. Listing With a Realtor",
+    title: "Our Offer vs. Listing With a Realtor",
     src: "https://wpjtb1owrkxrkc6h.public.blob.vercel-storage.com/Video%207%20-%20Cash%20Offer%20vs.%20Listing%20With%20a%20Realtor.mp4",
   },
   {

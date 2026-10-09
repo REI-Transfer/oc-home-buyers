@@ -54,26 +54,27 @@ export default function ThankYouPage() {
             Thank You for Your Submission!
           </h1>
           <p className="mt-3 text-lg text-gray-600 max-w-lg mx-auto">
-            The {config.companyName} team has received your information and will be in touch within{" "}
-            <strong>24 hours</strong> with your cash offer. In the meantime, here are answers to common questions.
+            The {config.companyName} team has received your information. A <strong>Home Buying Specialist</strong>{" "}
+            will call you to talk through your situation and property details. In the meantime, here are answers to common questions.
           </p>
         </div>
 
-        {/* Founders photo — full bleed, natural aspect, with gradient caption overlay at the bottom.
-            Moved off the /v3 LP and onto /thank-you per William 2026-06-05. */}
+        {/* Main photo — full bleed, natural aspect, with gradient caption overlay at the bottom.
+            Client 2026-10-09: this page is about OC Home Buyers, not only the founders; a team photo
+            replaces the founders photo once they send it (swap the src). */}
         <section className="mb-8 overflow-hidden rounded-2xl shadow-sm">
           <div className="relative">
             <img
               src="/images/founders-looney.jpg"
-              alt={`${config.ownerName || "Nate & Taylor"} — Orange County Home Buyers`}
+              alt={`The ${config.companyName} team, Orange County`}
               className="block w-full h-auto"
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent px-5 pb-5 pt-16 md:px-6 md:pb-6 md:pt-20">
               <p className="text-white text-xl md:text-2xl font-semibold leading-tight drop-shadow">
-                We&apos;re Nate &amp; Taylor.
+                We&apos;re {config.companyName}.
               </p>
               <p className="mt-1 text-white/95 text-sm md:text-base leading-snug drop-shadow">
-                Orange County local. We review every offer personally.
+                Orange County local since 2015.
               </p>
             </div>
           </div>
@@ -106,15 +107,9 @@ export default function ThankYouPage() {
           <p className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
             A Personal Note
           </p>
-          {config.ownerName ? (
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              From {config.ownerName}
-            </h2>
-          ) : (
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              From Our Team
-            </h2>
-          )}
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            From the Founders of {config.companyName}
+          </h2>
 
           {/* Owner headshot (if available) */}
           {config.headshotUrl && (
@@ -130,7 +125,7 @@ export default function ThankYouPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900">{config.ownerName || config.companyName}</p>
-                <p className="text-xs text-gray-500">{config.companyName}</p>
+                <p className="text-xs text-gray-500">Founders, {config.companyName}</p>
               </div>
             </div>
           )}
@@ -152,9 +147,10 @@ export default function ThankYouPage() {
               you to repaint your kitchen and &ldquo;list it in the spring.&rdquo;
             </p>
             <p>
-              Here&apos;s what happens next: Our team is going to review the information you submitted. Within 24 hours,
-              you&apos;ll hear from us with a fair, no-obligation cash offer. No pressure. No games. If the number works
-              for you, great. If it doesn&apos;t, no hard feelings. We&apos;ll still answer any questions you have.
+              Here&apos;s what happens next: you&apos;ll receive a phone call from a Home Buying Specialist on our team to
+              discuss your situation and property details. Then, if we&apos;re the right fit for you, we&apos;ll schedule
+              a time to come to your property and give you an offer. No pressure. No games. If the number works for you,
+              great. If it doesn&apos;t, no hard feelings. We&apos;ll still answer any questions you have.
             </p>
           </div>
         </div>
@@ -164,8 +160,8 @@ export default function ThankYouPage() {
           <h3 className="text-lg font-bold text-gray-900 mb-4">What Happens Next</h3>
           <div className="space-y-4">
             {[
-              { step: "1", title: "We review your property", desc: "Our team looks at your submission and researches the property." },
-              { step: "2", title: "You get a cash offer", desc: "Within 24 hours, we\u2019ll reach out with a fair, no-obligation offer." },
+              { step: "1", title: "We give you a call", desc: "A Home Buying Specialist calls you to discuss your situation and property details." },
+              { step: "2", title: "We come to your property", desc: "If we\u2019re a good fit for you, we\u2019ll schedule a time to come to your property and give you an offer." },
               { step: "3", title: "You choose your closing date", desc: "If you accept, you pick the date. We handle the rest." },
             ].map(({ step, title, desc }) => (
               <div key={step} className="flex gap-4">
@@ -190,7 +186,7 @@ export default function ThankYouPage() {
             Have questions in the meantime?
           </p>
           <p className="text-sm text-gray-500 mb-5">
-            Text or call. Either reaches Nate &amp; Taylor directly.
+            Text or call. Either reaches a Home Buying Specialist on our team.
           </p>
           <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
             <a
@@ -227,7 +223,7 @@ export default function ThankYouPage() {
               Real Google Reviews
             </p>
             <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-              What OC homeowners say about working with Nate &amp; Taylor
+              What OC homeowners say about working with {config.companyName}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -257,7 +253,7 @@ export default function ThankYouPage() {
 
         {/* Advertorial reads — surfaces the article library so the prospect can
             keep consuming content while they wait. Pulls the first 3 from
-            lib/articles.ts. */}
+            lib/articles.ts, skipping any whose title or teaser mentions cash (client 2026-10-09). */}
         <section className="mb-8">
           <div className="text-center mb-5">
             <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">
@@ -268,7 +264,7 @@ export default function ThankYouPage() {
             </h2>
           </div>
           <div className="space-y-4">
-            {ARTICLES.slice(0, 3).map((a) => (
+            {ARTICLES.filter((a) => !/cash/i.test(a.title + " " + a.teaser)).slice(0, 3).map((a) => (
               <Link
                 key={a.slug}
                 href={a.slug}
