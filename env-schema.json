@@ -192,5 +192,21 @@
     "scope": "public",
     "default": "[]",
     "description": "Client-side copy of SERVICE_AREAS for address autocomplete location bias and validation. JSON array of circles: [{centerLat, centerLng, radiusMiles}]."
+  },
+  {
+    "name": "NEXT_PUBLIC_ADDRESS_BOUNDS",
+    "type": "string",
+    "required": false,
+    "scope": "public",
+    "default": "",
+    "description": "Optional box that keeps address suggestions (and typed-address lookups) inside the buying area: \"south,west,north,east\". Empty = use the SERVICE_AREAS circles; no circles = no restriction."
+  },
+  {
+    "name": "GOFUNNEL_WEBHOOK_SECRET",
+    "type": "string",
+    "required": false,
+    "scope": "server",
+    "default": "",
+    "description": "Bearer secret for the GoFunnel external webhook (lead forwarding for gf_sid attribution). No default in code: when unset the GoFunnel forward is skipped and a warning is logged."
   }
 ]

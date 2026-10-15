@@ -85,7 +85,12 @@ export async function POST(request: Request) {
     // --- GoFunnel external webhook: forward the lead for gf_sid attribution ---
     try {
       const GF_CREDENTIAL_ID = process.env.GOFUNNEL_WEBHOOK_CREDENTIAL_ID || "1ee16e7a-7d6e-469c-8f16-b1dd4bb54f8b"
-      const GF_BEARER = process.env.GOFUNNEL_WEBHOOK_SECRET || "22cece1a-dd97-42e7-8477-5c09e83f3a7c"
+      // The bearer secret lives ONLY in the Vercel env var, never in source.
+      // Unset = skip the GoFunnel forward (the lead still reaches the CRM above).
+      const GF_BEARER = process.env.GOFUNNEL_WEBHOOK_SECRET || ""
+      if (!GF_BEARER) {
+        console.warn("[submit] GOFUNNEL_WEBHOOK_SECRET is not set; skipping GoFunnel forward")
+      }
       if (GF_CREDENTIAL_ID && GF_BEARER) {
         const gfCookie = request.headers.get("cookie") || ""
         const gfMatch = gfCookie.match(/(?:^|; )gf_sid=([^;]*)/)
