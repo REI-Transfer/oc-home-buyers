@@ -4,6 +4,7 @@ import { CheckCircle2, Phone, MessageSquare, Star, ArrowRight } from "lucide-rea
 import config from "@/lib/config"
 import { ARTICLES } from "@/lib/articles"
 import { VideoGallery } from "@/components/thank-you/video-gallery"
+import { YouTubeTestimonials } from "@/components/thank-you/youtube-testimonials"
 
 // Google reviews verbatim from OC Home Buyers' public Google Business profile
 // (Place ID ChIJl2lnM8cf3YARMbqnS2UTE9k — 5.0 rating). Same data the /v2
@@ -210,6 +211,11 @@ export default function ThankYouPage() {
             {config.phoneDisplay}
           </p>
         </div>
+
+        {/* YouTube video testimonials from the client's channel (components/thank-you/youtube-testimonials.tsx). */}
+        <section className="mb-8">
+          <YouTubeTestimonials companyName={config.companyName} accentColor={config.accentColor} />
+        </section>
 
         {/* Google Reviews — public Google Business reviews, 5.0 star average. */}
         <section className="mb-8">
