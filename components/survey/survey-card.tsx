@@ -255,9 +255,9 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
       return
     }
 
-    // Contact step (2): require first name + phone; email + last name optional.
+    // Contact step (3): require first name + phone; email + last name optional.
     // Validate, fire the early-capture partial lead, then advance.
-    if (step === 2) {
+    if (step === 3) {
       const errors: {[key: string]: string} = {}
       const firstCheck = validateName(surveyData.firstName)
       if (!firstCheck.valid) errors.firstName = firstCheck.msg
@@ -272,12 +272,12 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
         return
       }
       fireEarlyCapture()
-      setStep(3)
+      setStep(4)
       return
     }
 
     if (step === totalSteps) {
-      // Contact was validated at step 2; the final question (condition) completes the lead.
+      // Contact was validated at step 3; the final question (condition) completes the lead.
       const timeSpent = Date.now() - formStartTime.current
       if (timeSpent < 3000) {
         setIsSubmitted(true)
@@ -406,13 +406,13 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
   const canProceed = () => {
     switch (step) {
       case 1: return surveyData.address.trim().length > 0 && addressVerified
-      case 2: return (
+      case 3: return (
         surveyData.firstName.trim().length > 0 &&
         surveyData.phone.replace(/\D/g, "").length >= 10
       )
-      case 3: return surveyData.propertyType !== ""
-      case 4: return surveyData.isLegalOwner !== ""
-      case 5: return surveyData.listedOnMarket !== ""
+      case 2: return surveyData.listedOnMarket !== ""
+      case 4: return surveyData.propertyType !== ""
+      case 5: return surveyData.isLegalOwner !== ""
       case 6: return surveyData.timeline !== ""
       case 7: return surveyData.ownershipLength !== ""
       case 8: return surveyData.reason !== ""
@@ -423,7 +423,16 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
 
   const handleOptionSelect = (field: keyof SurveyData, value: string) => {
     setSurveyData({ ...surveyData, [field]: value })
-    // DQ -> flag: no lead is dropped. Qualification is computed at submit
+    // Listed = hard DQ. Asked at step 2, before Contact, so no early capture
+    // reaches the CRM for a listed property.
+    if (field === "listedOnMarket" && ["listed-realtor", "listed-fsbo"].includes(value)) {
+      setTimeout(() => {
+        setDisqualifyReason("listed")
+        setIsDisqualified(true)
+      }, 300)
+      return
+    }
+    // Other DQs -> flag: no lead is dropped. Qualification is computed at submit
     // (isQualifiedForMeta) and drives the Meta event (Lead vs LeadLowIntent).
     setTimeout(() => { if (step < totalSteps) setStep(step + 1) }, 300)
   }
@@ -583,7 +592,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">What type of property is it?</h2>
@@ -595,7 +604,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">Are you the legal homeowner?</h2>
@@ -607,7 +616,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 5 && (
+        {step === 2 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">Is the property currently listed on the market?</h2>
@@ -667,7 +676,7 @@ export function SurveyCard({ phoneDisplay = "(800) 000-0000", phoneHref = "80000
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="flex flex-col gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900">How can we reach you?</h2>
