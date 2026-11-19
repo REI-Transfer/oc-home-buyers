@@ -15,7 +15,8 @@
 
 import config from "@/lib/config"
 import Image from "next/image"
-import { ZeroDistractionForm } from "@/components/survey/zero-distraction-form"
+// NEXT_PUBLIC_RECORD_FORM switch (property-record form); off = the zero-distraction form.
+import { ZeroDistractionFormWithRecordForm } from "@/components/survey/zdf-record-switch"
 import { Footer } from "@/components/layout/footer"
 import { TrackingCapture } from "@/components/tracking/tracking-capture"
 import { getHeadlineForUtm } from "@/lib/headline-router"
@@ -92,7 +93,8 @@ export default async function V3Page({
         {/* THE FORM. The ONLY thing on this page. Trust photo lives on /thank-you.
             Call + Text CTAs ONLY appear inside the form on DQ — never as a
             persistent distraction bar (William 2026-06-05). */}
-        <ZeroDistractionForm
+        <ZeroDistractionFormWithRecordForm
+          companyName={config.companyName}
           accentColor={config.accentColor}
           serviceAreas={parsedServiceAreas}
           disqualifiedPropertyTypes={disqualifiedPropertyTypes}

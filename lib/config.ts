@@ -55,6 +55,8 @@ const config = {
 
   // Webhook (server-side only — never exposed to browser)
   webhookUrl:      process.env.WEBHOOK_URL ?? "",
+  // SHOWROOM=1: demo site only (property-record form). Never set on a client site.
+  showroom:        process.env.SHOWROOM === "1",
 } as const
 
 export default config

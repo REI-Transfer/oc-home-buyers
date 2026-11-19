@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { recordStep } from "@/lib/record-check"
 
 // Simple in-memory rate limiter (resets on deploy/restart)
 const submissionLog = new Map<string, { count: number; firstSubmit: number }>()
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const data = await request.json()
+    let data = await request.json()
     const stage = data.lead_stage || 'complete'
 
     // Honeypot — silently 200 without forwarding to n8n. Bots fill every
@@ -66,15 +67,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Address required" }, { status: 400 })
     }
 
-    const payload = { ...data, server_ip: ip, lead_stage: stage }
+    // Property-record form only (record_check, see lib/record-check.ts): check the house on
+    // public records. Every other post comes back untouched and is forwarded as before.
+    const rec = await recordStep(data)
+    data = rec.data
+
+    // lead_stage: a property-record post screened out is sent as "disqualified" (same as stage otherwise).
+    const payload = { ...data, server_ip: ip, lead_stage: data.lead_stage || stage }
 
     // Webhook routing: same URL for both stages by default; n8n branches on `lead_stage`.
     // Optional override via WEBHOOK_URL_EARLY / WEBHOOK_URL_COMPLETE.
     const earlyUrl = process.env.WEBHOOK_URL_EARLY || process.env.WEBHOOK_URL
     const completeUrl = process.env.WEBHOOK_URL_COMPLETE || process.env.WEBHOOK_URL
-    const webhookUrl = stage === 'early' ? earlyUrl : completeUrl
+    const webhookUrl = payload.lead_stage === 'early' ? earlyUrl : completeUrl
 
-    if (webhookUrl) {
+    if (webhookUrl && !rec.skipWebhook) {
       await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,7 +93,7 @@ export async function POST(request: Request) {
     try {
       const GF_CREDENTIAL_ID = process.env.GOFUNNEL_WEBHOOK_CREDENTIAL_ID || "1ee16e7a-7d6e-469c-8f16-b1dd4bb54f8b"
       const GF_BEARER = process.env.GOFUNNEL_WEBHOOK_SECRET || "22cece1a-dd97-42e7-8477-5c09e83f3a7c"
-      if (GF_CREDENTIAL_ID && GF_BEARER) {
+      if (GF_CREDENTIAL_ID && GF_BEARER && !rec.skipGoFunnel) {
         const gfCookie = request.headers.get("cookie") || ""
         const gfMatch = gfCookie.match(/(?:^|; )gf_sid=([^;]*)/)
         const gfSid = (data.gf_sid || (gfMatch ? decodeURIComponent(gfMatch[1]) : "") || "").toString().trim()
@@ -143,7 +150,7 @@ export async function POST(request: Request) {
       }
     } catch {}
 
-    return NextResponse.json({ success: true, stage })
+    return NextResponse.json({ success: true, stage, ...rec.response })
   } catch {
     return NextResponse.json({ success: false }, { status: 500 })
   }
