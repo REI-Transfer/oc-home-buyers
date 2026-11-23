@@ -115,9 +115,11 @@ const ZDF_OPTIONS: typeof THEMES_OPTIONS = {
     { id: "wholesaler", label: "I'm a wholesaler" },
     { id: "other", label: "Other" },
   ],
+  // William's 3 choices (2026-11-23); "for sale by owner" goes out as "yes" (listedAnswerId).
   listedOnMarket: [
+    { id: "yes", label: "Yes, listed with a realtor" },
+    { id: "listed-fsbo", label: "Yes, listed for sale by owner" },
     { id: "no", label: "No, it's not listed" },
-    { id: "yes", label: "Yes, it's listed" },
   ],
   ownershipLength: [
     { id: "0-2", label: "Less than 2 years" },
@@ -235,7 +237,8 @@ export function propertyTypeId(kind: string): string {
 // The listed choice the seller tapped → the value this client's form always sent.
 // Themes forms never had a "for sale by owner" value: it goes out as listed-active.
 export const listedAnswerId = (choice: string): string =>
-  answerProfile() === "themes" && choice === "listed-fsbo" ? "listed-active" : choice
+  choice !== "listed-fsbo" ? choice
+    : answerProfile() === "themes" ? "listed-active" : answerProfile() === "zdf" ? "yes" : choice
 export const listedId = (listedNow: boolean): string =>
   answerProfile() === "zdf" ? (listedNow ? "yes" : "no")
     : listedNow ? (answerProfile() === "v1" ? "listed-realtor" : "listed-active") : "not-listed"
